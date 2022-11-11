@@ -1,0 +1,14 @@
+---
+run:
+  timeout: 3m
+  build-tags:
+    - integration
+
+linters:
+  enable:
+    - misspell
+    - goimports
+    - revive
+    - gofmt
+    - depguard
+    - godot
