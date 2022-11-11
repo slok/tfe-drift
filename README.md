@@ -1,3 +1,3 @@
-# tfc-drift
+# tfe-drift
 
-Terraform cloud drift checker.
+Automated and OSS Terraform cloud drift checker.
