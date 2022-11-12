@@ -16,6 +16,7 @@ func NewSortByOldestDetectionPlanProcessor(logger log.Logger) Processor {
 
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
 		logger.Infof("Sorting Workspaces by oldest drift detection")
+
 		sort.SliceStable(wks, func(i, j int) bool {
 			// If not last drift plan, treat as the oldest possible TS.
 			var ti, tj time.Time

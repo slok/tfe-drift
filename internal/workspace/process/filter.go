@@ -62,6 +62,23 @@ func NewExcludeNameProcessor(logger log.Logger, regexes []string) (Processor, er
 	}), nil
 }
 
+func NewLimitMaxProcessor(logger log.Logger, max int) Processor {
+	// If 0, then no limit
+	if max == 0 {
+		return NoopProcessor
+	}
+
+	logger = logger.WithValues(log.Kv{"workspace-processor": "LimitMaxProcessor"})
+	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
+		logger.Infof("Limiting max drift plan detections")
+		if max >= len(wks) {
+			return wks, nil
+		}
+
+		return wks[:max], nil
+	})
+}
+
 func compileRegexes(regexes []string) ([]*regexp.Regexp, error) {
 	rxs := []*regexp.Regexp{}
 	for _, r := range regexes {

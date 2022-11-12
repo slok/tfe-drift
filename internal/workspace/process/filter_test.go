@@ -133,3 +133,45 @@ func TestIncludeNameProcessor(t *testing.T) {
 		})
 	}
 }
+
+func TestLimitMaxProcessor(t *testing.T) {
+	tests := map[string]struct {
+		max           int
+		workspaces    []model.Workspace
+		expWorkspaces []model.Workspace
+		expErr        bool
+	}{
+		"Having no limit should not limit.": {
+			max:           0,
+			workspaces:    []model.Workspace{{Name: "wk1"}, {Name: "wk2"}, {Name: "wk3"}, {Name: "wk4"}},
+			expWorkspaces: []model.Workspace{{Name: "wk1"}, {Name: "wk2"}, {Name: "wk3"}, {Name: "wk4"}},
+		},
+
+		"Having a limit should limit.": {
+			max:           2,
+			workspaces:    []model.Workspace{{Name: "wk1"}, {Name: "wk2"}, {Name: "wk3"}, {Name: "wk4"}},
+			expWorkspaces: []model.Workspace{{Name: "wk1"}, {Name: "wk2"}},
+		},
+
+		"Having a bigger limit than workspaces should return all workspaces.": {
+			max:           200,
+			workspaces:    []model.Workspace{{Name: "wk1"}, {Name: "wk2"}, {Name: "wk3"}, {Name: "wk4"}},
+			expWorkspaces: []model.Workspace{{Name: "wk1"}, {Name: "wk2"}, {Name: "wk3"}, {Name: "wk4"}},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			p := process.NewLimitMaxProcessor(log.Noop, test.max)
+			gotWks, err := p.Process(context.TODO(), test.workspaces)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expWorkspaces, gotWks)
+			}
+		})
+	}
+}
