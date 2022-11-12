@@ -12,7 +12,7 @@ import (
 	"github.com/slok/tfe-drift/internal/workspace/process"
 )
 
-func TestExcludeProcessor(t *testing.T) {
+func TestExcludeNameProcessor(t *testing.T) {
 	tests := map[string]struct {
 		regexes       []string
 		workspaces    []model.Workspace
@@ -60,7 +60,7 @@ func TestExcludeProcessor(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
 
-			p, err := process.NewExcludeProcessor(log.Noop, test.regexes)
+			p, err := process.NewExcludeNameProcessor(log.Noop, test.regexes)
 			require.NoError(err)
 			gotWks, err := p.Process(context.TODO(), test.workspaces)
 
@@ -73,7 +73,7 @@ func TestExcludeProcessor(t *testing.T) {
 	}
 }
 
-func TestIncludeProcessor(t *testing.T) {
+func TestIncludeNameProcessor(t *testing.T) {
 	tests := map[string]struct {
 		regexes       []string
 		workspaces    []model.Workspace
@@ -121,7 +121,7 @@ func TestIncludeProcessor(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
 
-			p, err := process.NewIncludeProcessor(log.Noop, test.regexes)
+			p, err := process.NewIncludeNameProcessor(log.Noop, test.regexes)
 			require.NoError(err)
 			gotWks, err := p.Process(context.TODO(), test.workspaces)
 

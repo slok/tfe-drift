@@ -9,19 +9,21 @@ import (
 	"github.com/slok/tfe-drift/internal/model"
 )
 
-func NewIncludeProcessor(logger log.Logger, regexes []string) (Processor, error) {
+func NewIncludeNameProcessor(logger log.Logger, regexes []string) (Processor, error) {
 	// If no regex, then match all.
 	if len(regexes) == 0 {
 		return NoopProcessor, nil
 	}
 
-	logger = logger.WithValues(log.Kv{"workspace-processor": "include"})
+	logger = logger.WithValues(log.Kv{"workspace-processor": "IncludeNameProcessor"})
 	rxs, err := compileRegexes(regexes)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexes: %w", err)
 	}
 
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
+		logger.Infof("Including workspaces by name")
+
 		newWks := []model.Workspace{}
 		for _, wk := range wks {
 			if !matchStringRegexes(rxs, wk.Name) {
@@ -36,14 +38,16 @@ func NewIncludeProcessor(logger log.Logger, regexes []string) (Processor, error)
 	}), nil
 }
 
-func NewExcludeProcessor(logger log.Logger, regexes []string) (Processor, error) {
-	logger = logger.WithValues(log.Kv{"workspace-processor": "exclude"})
+func NewExcludeNameProcessor(logger log.Logger, regexes []string) (Processor, error) {
+	logger = logger.WithValues(log.Kv{"workspace-processor": "ExcludeNameProcessor"})
 	rxs, err := compileRegexes(regexes)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexes: %w", err)
 	}
 
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
+		logger.Infof("Exluding workspaces by name")
+
 		newWks := []model.Workspace{}
 		for _, wk := range wks {
 			if matchStringRegexes(rxs, wk.Name) {
