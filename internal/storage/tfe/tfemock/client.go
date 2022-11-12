@@ -38,6 +38,29 @@ func (_m *Client) CreateRun(ctx context.Context, options tfe.RunCreateOptions) (
 	return r0, r1
 }
 
+// ListRuns provides a mock function with given fields: ctx, workspaceID, options
+func (_m *Client) ListRuns(ctx context.Context, workspaceID string, options *tfe.RunListOptions) (*tfe.RunList, error) {
+	ret := _m.Called(ctx, workspaceID, options)
+
+	var r0 *tfe.RunList
+	if rf, ok := ret.Get(0).(func(context.Context, string, *tfe.RunListOptions) *tfe.RunList); ok {
+		r0 = rf(ctx, workspaceID, options)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*tfe.RunList)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, *tfe.RunListOptions) error); ok {
+		r1 = rf(ctx, workspaceID, options)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListWorkspaces provides a mock function with given fields: ctx, organization, options
 func (_m *Client) ListWorkspaces(ctx context.Context, organization string, options *tfe.WorkspaceListOptions) (*tfe.WorkspaceList, error) {
 	ret := _m.Called(ctx, organization, options)
