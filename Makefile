@@ -58,7 +58,7 @@ go-gen: build-dev-image  ## Generates go based code.
 	@$(DOCKER_RUN_CMD) /bin/sh -c './scripts/gogen.sh'
 
 .PHONY: gen
-gen: kube-gen go-gen examples-gen deploy-gen ## Generates all.
+gen: go-gen ## Generates all.
 
 .PHONY: deps
 deps:  ## Fixes the dependencies
