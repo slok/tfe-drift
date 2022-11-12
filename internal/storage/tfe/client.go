@@ -11,6 +11,7 @@ type Client interface {
 	ListWorkspaces(ctx context.Context, organization string, options *tfe.WorkspaceListOptions) (*tfe.WorkspaceList, error)
 	CreateRun(ctx context.Context, options tfe.RunCreateOptions) (*tfe.Run, error)
 	ReadRun(ctx context.Context, runID string) (*tfe.Run, error)
+	ListRuns(ctx context.Context, workspaceID string, options *tfe.RunListOptions) (*tfe.RunList, error)
 }
 
 //go:generate mockery --case underscore --output tfemock --outpkg tfemock --name Client
@@ -34,4 +35,8 @@ func (t tfeClient) CreateRun(ctx context.Context, options tfe.RunCreateOptions) 
 
 func (t tfeClient) ReadRun(ctx context.Context, runID string) (*tfe.Run, error) {
 	return t.c.Runs.Read(ctx, runID)
+}
+
+func (t tfeClient) ListRuns(ctx context.Context, workspaceID string, options *tfe.RunListOptions) (*tfe.RunList, error) {
+	return t.c.Runs.List(ctx, workspaceID, options)
 }

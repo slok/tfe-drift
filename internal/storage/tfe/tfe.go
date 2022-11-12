@@ -6,7 +6,12 @@ import (
 
 	"github.com/hashicorp/go-tfe"
 
+	"github.com/slok/tfe-drift/internal/internalerrors"
 	"github.com/slok/tfe-drift/internal/model"
+)
+
+const (
+	messageIDFmt = "tfe-drift/detector-id/%s"
 )
 
 // Repository knows how to manage data on Terraform enterprise or cloud.
@@ -14,18 +19,21 @@ type Repository interface {
 	ListWorkspaces(ctx context.Context) ([]model.Workspace, error)
 	CreateCheckPlan(ctx context.Context, w model.Workspace, message string) (*model.Plan, error)
 	GetCheckPlan(ctx context.Context, id string) (*model.Plan, error)
+	GetLatestCheckPlan(ctx context.Context, w model.Workspace) (*model.Plan, error)
 }
 
-func NewRepository(c Client, org string) (Repository, error) {
+func NewRepository(c Client, org, detectorID string) (Repository, error) {
 	return repository{
-		c:   c,
-		org: org,
+		c:          c,
+		org:        org,
+		detectorID: detectorID,
 	}, nil
 }
 
 type repository struct {
-	c   Client
-	org string
+	c          Client
+	org        string
+	detectorID string
 }
 
 func (r repository) ListWorkspaces(ctx context.Context) ([]model.Workspace, error) {
@@ -62,9 +70,12 @@ func (r repository) ListWorkspaces(ctx context.Context) ([]model.Workspace, erro
 }
 
 func (r repository) CreateCheckPlan(ctx context.Context, wk model.Workspace, message string) (*model.Plan, error) {
+	messageID := fmt.Sprintf(messageIDFmt, r.detectorID)
+	finalMessage := fmt.Sprintf("%s: %s", message, messageID)
+
 	run, err := r.c.CreateRun(ctx, tfe.RunCreateOptions{
 		PlanOnly:             tfe.Bool(true),
-		Message:              tfe.String(message),
+		Message:              tfe.String(finalMessage),
 		Workspace:            wk.OriginalObject,
 		ConfigurationVersion: nil, // This will make the plan run with the latest revision configured (normally main/master branch).
 	})
@@ -89,6 +100,29 @@ func (r repository) GetCheckPlan(ctx context.Context, id string) (*model.Plan, e
 
 	// Map to model.
 	plan, err := mapPlanTFE2Model(run)
+	if err != nil {
+		return nil, fmt.Errorf("could not map tfe run to model: %w", err)
+	}
+
+	return plan, nil
+}
+
+func (r repository) GetLatestCheckPlan(ctx context.Context, w model.Workspace) (*model.Plan, error) {
+	messageID := fmt.Sprintf(messageIDFmt, r.detectorID)
+	runs, err := r.c.ListRuns(ctx, w.ID, &tfe.RunListOptions{
+		Search:      messageID,
+		ListOptions: tfe.ListOptions{PageSize: 1},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("could not get check plan from tfe: %w", err)
+	}
+
+	if len(runs.Items) == 0 {
+		return nil, fmt.Errorf("check plans missing: %w", internalerrors.ErrNotExist)
+	}
+
+	// Map to model.
+	plan, err := mapPlanTFE2Model(runs.Items[0])
 	if err != nil {
 		return nil, fmt.Errorf("could not map tfe run to model: %w", err)
 	}

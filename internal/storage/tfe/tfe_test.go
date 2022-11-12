@@ -82,7 +82,7 @@ func TestRepositoryListWorkspaces(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test")
+			r, _ := tfe.NewRepository(mc, "test", "test")
 			gotWks, err := r.ListWorkspaces(context.TODO())
 
 			if test.expErr {
@@ -146,7 +146,7 @@ func TestRepositoryCreateCheckPlan(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test")
+			r, _ := tfe.NewRepository(mc, "test", "test")
 			gotPlan, err := r.CreateCheckPlan(context.TODO(), test.workspace, "test")
 
 			if test.expErr {
@@ -209,8 +209,86 @@ func TestRepositoryGetCheckPlan(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test")
+			r, _ := tfe.NewRepository(mc, "test", "test")
 			gotPlan, err := r.GetCheckPlan(context.TODO(), "test")
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expPlan, gotPlan)
+			}
+		})
+	}
+}
+
+func TestRepositoryLatestCheckPlan(t *testing.T) {
+	t0 := time.Now()
+
+	tests := map[string]struct {
+		mock      func(mc *tfemock.Client)
+		workspace model.Workspace
+		expPlan   *model.Plan
+		expErr    bool
+	}{
+		"Having an error while getting a plan, should fail.": {
+			workspace: model.Workspace{ID: "test"},
+			mock: func(mc *tfemock.Client) {
+				mc.On("ListRuns", mock.Anything, "test", mock.Anything).Once().Return(nil, fmt.Errorf("something"))
+			},
+			expErr: true,
+		},
+
+		"Having no runs should return fail.": {
+			workspace: model.Workspace{ID: "test"},
+			mock: func(mc *tfemock.Client) {
+				mc.On("ListRuns", mock.Anything, "test", mock.Anything).Once().Return(&gotfe.RunList{}, nil)
+			},
+			expErr: true,
+		},
+
+		"Getting a plan should map the model.": {
+			workspace: model.Workspace{ID: "test"},
+			mock: func(mc *tfemock.Client) {
+				expOpts := &gotfe.RunListOptions{
+					Search:      "tfe-drift/detector-id/test-id",
+					ListOptions: gotfe.ListOptions{PageSize: 1},
+				}
+				mc.On("ListRuns", mock.Anything, "test", expOpts).Once().Return(&gotfe.RunList{Items: []*gotfe.Run{
+					{
+						ID:         "test-id-1",
+						Message:    "test-1",
+						HasChanges: false,
+						Status:     gotfe.RunPlanQueued,
+						CreatedAt:  t0,
+					}}}, nil)
+			},
+			expPlan: &model.Plan{
+				ID:         "test-id-1",
+				Message:    "test-1",
+				HasChanges: false,
+				Status:     model.PlanStatusWaiting,
+				CreatedAt:  t0,
+				OriginalObject: &gotfe.Run{
+					ID:         "test-id-1",
+					Message:    "test-1",
+					HasChanges: false,
+					Status:     gotfe.RunPlanQueued,
+					CreatedAt:  t0,
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			// Mocks.
+			mc := tfemock.NewClient(t)
+			test.mock(mc)
+
+			r, _ := tfe.NewRepository(mc, "test", "test-id")
+			gotPlan, err := r.GetLatestCheckPlan(context.TODO(), test.workspace)
 
 			if test.expErr {
 				assert.Error(err)
