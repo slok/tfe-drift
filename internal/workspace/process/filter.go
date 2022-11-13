@@ -79,6 +79,25 @@ func NewLimitMaxProcessor(logger log.Logger, max int) Processor {
 	})
 }
 
+func NewFilterQueuedDriftDetectorProcessor(logger log.Logger) Processor {
+	logger = logger.WithValues(log.Kv{"workspace-processor": "FilterQueuedDriftDetector"})
+	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
+		logger.Infof("Filtering already queued drift detection plans")
+
+		newWks := []model.Workspace{}
+		for _, wk := range wks {
+			if wk.LastDriftPlan != nil && wk.LastDriftPlan.Status == model.PlanStatusWaiting {
+				logger.WithValues(log.Kv{"workspace": wk.ID}).Debugf("Ignoring workspace")
+				continue
+			}
+
+			newWks = append(newWks, wk)
+		}
+
+		return newWks, nil
+	})
+}
+
 func compileRegexes(regexes []string) ([]*regexp.Regexp, error) {
 	rxs := []*regexp.Regexp{}
 	for _, r := range regexes {

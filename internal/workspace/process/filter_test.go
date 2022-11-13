@@ -175,3 +175,39 @@ func TestLimitMaxProcessor(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterQueuedDriftDetectorProcessor(t *testing.T) {
+	tests := map[string]struct {
+		workspaces    []model.Workspace
+		expWorkspaces []model.Workspace
+		expErr        bool
+	}{
+		"Having queued state plans should ignore them.": {
+			workspaces: []model.Workspace{
+				{Name: "wk1"},
+				{Name: "wk2", LastDriftPlan: &model.Plan{Status: model.PlanStatusWaiting}},
+				{Name: "wk3", LastDriftPlan: &model.Plan{Status: model.PlanStatusFinishedOK}},
+				{Name: "wk4", LastDriftPlan: &model.Plan{Status: model.PlanStatusWaiting}},
+			},
+			expWorkspaces: []model.Workspace{
+				{Name: "wk1"},
+				{Name: "wk3", LastDriftPlan: &model.Plan{Status: model.PlanStatusFinishedOK}},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			p := process.NewFilterQueuedDriftDetectorProcessor(log.Noop)
+			gotWks, err := p.Process(context.TODO(), test.workspaces)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expWorkspaces, gotWks)
+			}
+		})
+	}
+}
