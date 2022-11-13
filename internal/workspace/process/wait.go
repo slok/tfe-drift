@@ -27,13 +27,13 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
 		c := make(chan waitResult)
 		for _, wk := range wks {
-			logger := logger.WithValues(log.Kv{"workspace": wk.Name})
+			logger := logger.WithValues(log.Kv{"workspace": wk.Name, "run-id": wk.LastDriftPlan.ID})
 
 			// For each workspace wait concurrently.
 			wk := wk
 			go func() {
 				planID := wk.LastDriftPlan.ID
-				logger.Infof("Waiting for drift detection plan to finish: %s", planID)
+				logger.Infof("Waiting for drift detection plan to finish")
 
 				plan, err := waitForPlan(ctx, g, planID, pollingDuration, timeoutDuration)
 				if err == nil {
@@ -48,13 +48,12 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 		indexedWks := map[string]model.Workspace{}
 		for i := 0; i < len(wks); i++ {
 			res := <-c
-			logger := logger.WithValues(log.Kv{"workspace": res.wk.Name})
 			if res.err != nil {
 				// TODO(slok): Add strict as an option so we can fail or not based on this option.
 				// Don't stop all the  process for other workspaces because of one workspace error.
 				logger.Errorf("Error while waiting for drift detection plan: %s", res.err)
 			} else {
-				logger.Infof("Drift detection plan finished: %s", res.wk.LastDriftPlan.ID)
+				logger.Infof("Drift detection plan finished")
 			}
 
 			indexedWks[res.wk.ID] = res.wk
