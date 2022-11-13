@@ -82,7 +82,7 @@ func TestRepositoryListWorkspaces(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test", "test")
+			r, _ := tfe.NewRepository(mc, "test", "https://test-tfe-drift.dev", "test")
 			gotWks, err := r.ListWorkspaces(context.TODO())
 
 			if test.expErr {
@@ -127,6 +127,7 @@ func TestRepositoryCreateCheckPlan(t *testing.T) {
 				HasChanges: true,
 				Status:     model.PlanStatusFinishedOK,
 				CreatedAt:  t0,
+				URL:        "https://test-tfe-drift.dev/app/test/workspaces//runs/test-id-1",
 				OriginalObject: &gotfe.Run{
 					ID:         "test-id-1",
 					Message:    "test-1",
@@ -146,7 +147,7 @@ func TestRepositoryCreateCheckPlan(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test", "test")
+			r, _ := tfe.NewRepository(mc, "test", "https://test-tfe-drift.dev", "test")
 			gotPlan, err := r.CreateCheckPlan(context.TODO(), test.workspace, "test")
 
 			if test.expErr {
@@ -190,6 +191,7 @@ func TestRepositoryGetCheckPlan(t *testing.T) {
 				HasChanges: false,
 				Status:     model.PlanStatusWaiting,
 				CreatedAt:  t0,
+				URL:        "https://test-tfe-drift.dev/app/test/workspaces//runs/test-id-1",
 				OriginalObject: &gotfe.Run{
 					ID:         "test-id-1",
 					Message:    "test-1",
@@ -209,8 +211,8 @@ func TestRepositoryGetCheckPlan(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test", "test")
-			gotPlan, err := r.GetCheckPlan(context.TODO(), "test")
+			r, _ := tfe.NewRepository(mc, "test", "https://test-tfe-drift.dev", "test")
+			gotPlan, err := r.GetCheckPlan(context.TODO(), model.Workspace{}, "test")
 
 			if test.expErr {
 				assert.Error(err)
@@ -268,6 +270,7 @@ func TestRepositoryLatestCheckPlan(t *testing.T) {
 				HasChanges: false,
 				Status:     model.PlanStatusWaiting,
 				CreatedAt:  t0,
+				URL:        "https://test-tfe-drift.dev/app/test/workspaces//runs/test-id-1",
 				OriginalObject: &gotfe.Run{
 					ID:         "test-id-1",
 					Message:    "test-1",
@@ -287,7 +290,7 @@ func TestRepositoryLatestCheckPlan(t *testing.T) {
 			mc := tfemock.NewClient(t)
 			test.mock(mc)
 
-			r, _ := tfe.NewRepository(mc, "test", "test-id")
+			r, _ := tfe.NewRepository(mc, "test", "https://test-tfe-drift.dev", "test-id")
 			gotPlan, err := r.GetLatestCheckPlan(context.TODO(), test.workspace)
 
 			if test.expErr {

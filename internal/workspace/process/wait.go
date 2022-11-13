@@ -10,7 +10,7 @@ import (
 )
 
 type WorkspaceCheckPlanGetter interface {
-	GetCheckPlan(ctx context.Context, id string) (*model.Plan, error)
+	GetCheckPlan(ctx context.Context, w model.Workspace, id string) (*model.Plan, error)
 }
 
 //go:generate mockery --case underscore --output processmock --outpkg processmock --name WorkspaceCheckPlanGetter
@@ -35,7 +35,7 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 				planID := wk.LastDriftPlan.ID
 				logger.Infof("Waiting for drift detection plan to finish")
 
-				plan, err := waitForPlan(ctx, g, planID, pollingDuration, timeoutDuration)
+				plan, err := waitForPlan(ctx, g, wk, planID, pollingDuration, timeoutDuration)
 				if err == nil {
 					wk.LastDriftPlan = plan
 				}
@@ -69,7 +69,7 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 	})
 }
 
-func waitForPlan(ctx context.Context, g WorkspaceCheckPlanGetter, planID string, pollingDur, timeoutDur time.Duration) (*model.Plan, error) {
+func waitForPlan(ctx context.Context, g WorkspaceCheckPlanGetter, wk model.Workspace, planID string, pollingDur, timeoutDur time.Duration) (*model.Plan, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeoutDur)
 	defer cancel()
 
@@ -79,7 +79,7 @@ func waitForPlan(ctx context.Context, g WorkspaceCheckPlanGetter, planID string,
 		case <-ctx.Done():
 			return nil, fmt.Errorf("context cancellation: %w", ctx.Err())
 		case <-ticker.C:
-			plan, err := g.GetCheckPlan(ctx, planID)
+			plan, err := g.GetCheckPlan(ctx, wk, planID)
 			if err != nil {
 				return nil, fmt.Errorf("could not get check plan %q: %w", planID, err)
 			}
