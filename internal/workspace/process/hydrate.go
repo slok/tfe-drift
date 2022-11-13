@@ -28,7 +28,7 @@ func NewHydrateLatestDetectionPlanProcessor(logger log.Logger, g WorkspaceLatest
 			if err != nil && !errors.Is(err, internalerrors.ErrNotExist) {
 				// TODO(slok): Add strict as an option so we can fail or not based on this option.
 				// Don't stop all the  process for other workspaces because of one workspace error.
-				logger.WithValues(log.Kv{"workspace": wk.ID}).Errorf("could not get latest drift detection plan for workspaces %q: %w", wk.Name, err)
+				logger.WithValues(log.Kv{"workspace": wk.Name}).Errorf("could not get latest drift detection plan for workspaces %q: %w", wk.Name, err)
 			}
 			wk.LastDriftPlan = plan
 			newWks = append(newWks, wk)
