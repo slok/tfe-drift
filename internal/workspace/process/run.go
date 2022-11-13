@@ -30,7 +30,10 @@ func NewDriftDetectionPlanProcessor(logger log.Logger, c WorkspaceCheckPlanCreat
 			} else {
 				createdPlans++
 				wk.LastDriftPlan = plan
-				logger.WithValues(log.Kv{"run-id": wk.LastDriftPlan.ID}).Infof("Drift detection plan created")
+				logger.WithValues(log.Kv{
+					"run-id":  wk.LastDriftPlan.ID,
+					"run-url": wk.LastDriftPlan.URL,
+				}).Infof("Drift detection plan created")
 			}
 
 			newWks = append(newWks, wk)

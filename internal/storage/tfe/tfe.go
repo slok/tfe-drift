@@ -18,14 +18,15 @@ const (
 type Repository interface {
 	ListWorkspaces(ctx context.Context) ([]model.Workspace, error)
 	CreateCheckPlan(ctx context.Context, w model.Workspace, message string) (*model.Plan, error)
-	GetCheckPlan(ctx context.Context, id string) (*model.Plan, error)
+	GetCheckPlan(ctx context.Context, w model.Workspace, id string) (*model.Plan, error)
 	GetLatestCheckPlan(ctx context.Context, w model.Workspace) (*model.Plan, error)
 }
 
-func NewRepository(c Client, org, detectorID string) (Repository, error) {
+func NewRepository(c Client, tfeOrg, tfeAddress, detectorID string) (Repository, error) {
 	return repository{
 		c:          c,
-		org:        org,
+		org:        tfeOrg,
+		tfeAddress: tfeAddress,
 		detectorID: detectorID,
 	}, nil
 }
@@ -33,6 +34,7 @@ func NewRepository(c Client, org, detectorID string) (Repository, error) {
 type repository struct {
 	c          Client
 	org        string
+	tfeAddress string
 	detectorID string
 }
 
@@ -89,10 +91,13 @@ func (r repository) CreateCheckPlan(ctx context.Context, wk model.Workspace, mes
 		return nil, fmt.Errorf("could not map tfe run to model: %w", err)
 	}
 
+	// Get URL.
+	plan.URL = r.runURL(wk.Name, run.ID)
+
 	return plan, nil
 }
 
-func (r repository) GetCheckPlan(ctx context.Context, id string) (*model.Plan, error) {
+func (r repository) GetCheckPlan(ctx context.Context, w model.Workspace, id string) (*model.Plan, error) {
 	run, err := r.c.ReadRun(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("could not get check plan from tfe: %w", err)
@@ -103,6 +108,9 @@ func (r repository) GetCheckPlan(ctx context.Context, id string) (*model.Plan, e
 	if err != nil {
 		return nil, fmt.Errorf("could not map tfe run to model: %w", err)
 	}
+
+	// Get URL.
+	plan.URL = r.runURL(w.Name, run.ID)
 
 	return plan, nil
 }
@@ -122,12 +130,22 @@ func (r repository) GetLatestCheckPlan(ctx context.Context, w model.Workspace) (
 	}
 
 	// Map to model.
-	plan, err := mapPlanTFE2Model(runs.Items[0])
+	run := runs.Items[0]
+	plan, err := mapPlanTFE2Model(run)
 	if err != nil {
 		return nil, fmt.Errorf("could not map tfe run to model: %w", err)
 	}
 
+	// Get URL.
+	plan.URL = r.runURL(w.Name, run.ID)
+
 	return plan, nil
+}
+
+func (r repository) runURL(workspaceName, runID string) string {
+	const runURLFmt = "%s/app/%s/workspaces/%s/runs/%s"
+
+	return fmt.Sprintf(runURLFmt, r.tfeAddress, r.org, workspaceName, runID)
 }
 
 func mapWorkspaceTFE2Model(w *tfe.Workspace) (*model.Workspace, error) {
@@ -138,14 +156,14 @@ func mapWorkspaceTFE2Model(w *tfe.Workspace) (*model.Workspace, error) {
 	}, nil
 }
 
-func mapPlanTFE2Model(r *tfe.Run) (*model.Plan, error) {
+func mapPlanTFE2Model(run *tfe.Run) (*model.Plan, error) {
 	return &model.Plan{
-		ID:             r.ID,
-		Message:        r.Message,
-		CreatedAt:      r.CreatedAt,
-		HasChanges:     r.HasChanges,
-		Status:         mapTFEStatus2Model(r.Status),
-		OriginalObject: r,
+		ID:             run.ID,
+		Message:        run.Message,
+		CreatedAt:      run.CreatedAt,
+		HasChanges:     run.HasChanges,
+		Status:         mapTFEStatus2Model(run.Status),
+		OriginalObject: run,
 	}, nil
 }
 

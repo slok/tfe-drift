@@ -30,9 +30,9 @@ func TestDriftDetectionPlanWaitProcessor(t *testing.T) {
 
 		"Having plans that are already finished, should end the execution correctly.": {
 			mock: func(mg *processmock.WorkspaceCheckPlanGetter) {
-				mg.On("GetCheckPlan", mock.Anything, "p1").Once().Return(&model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusFinishedNotOK}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p3").Once().Return(&model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p1").Once().Return(&model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusFinishedNotOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p3").Once().Return(&model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}, nil)
 			},
 			workspaces: []model.Workspace{
 				{ID: "wk1", LastDriftPlan: &model.Plan{ID: "p1"}},
@@ -48,11 +48,11 @@ func TestDriftDetectionPlanWaitProcessor(t *testing.T) {
 
 		"Having plans that are not finished, should wait until it can end the execution correctly.": {
 			mock: func(mg *processmock.WorkspaceCheckPlanGetter) {
-				mg.On("GetCheckPlan", mock.Anything, "p1").Once().Return(&model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusWaiting}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusWaiting}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusFinishedNotOK}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p3").Once().Return(&model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p1").Once().Return(&model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusWaiting}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusWaiting}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusFinishedNotOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p3").Once().Return(&model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}, nil)
 			},
 			workspaces: []model.Workspace{
 				{ID: "wk1", LastDriftPlan: &model.Plan{ID: "p1"}},
@@ -68,10 +68,10 @@ func TestDriftDetectionPlanWaitProcessor(t *testing.T) {
 
 		"Having errors, should continue waiting for others and not fail.": {
 			mock: func(mg *processmock.WorkspaceCheckPlanGetter) {
-				mg.On("GetCheckPlan", mock.Anything, "p1").Once().Return(&model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusWaiting}, nil)
-				mg.On("GetCheckPlan", mock.Anything, "p2").Once().Return(nil, fmt.Errorf("something"))
-				mg.On("GetCheckPlan", mock.Anything, "p3").Once().Return(&model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p1").Once().Return(&model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p2").Once().Return(&model.Plan{ID: "p2", Status: model.PlanStatusWaiting}, nil)
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p2").Once().Return(nil, fmt.Errorf("something"))
+				mg.On("GetCheckPlan", mock.Anything, mock.Anything, "p3").Once().Return(&model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}, nil)
 			},
 			workspaces: []model.Workspace{
 				{ID: "wk1", LastDriftPlan: &model.Plan{ID: "p1"}},

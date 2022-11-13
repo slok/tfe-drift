@@ -14,13 +14,13 @@ type WorkspaceCheckPlanGetter struct {
 	mock.Mock
 }
 
-// GetCheckPlan provides a mock function with given fields: ctx, id
-func (_m *WorkspaceCheckPlanGetter) GetCheckPlan(ctx context.Context, id string) (*model.Plan, error) {
-	ret := _m.Called(ctx, id)
+// GetCheckPlan provides a mock function with given fields: ctx, w, id
+func (_m *WorkspaceCheckPlanGetter) GetCheckPlan(ctx context.Context, w model.Workspace, id string) (*model.Plan, error) {
+	ret := _m.Called(ctx, w, id)
 
 	var r0 *model.Plan
-	if rf, ok := ret.Get(0).(func(context.Context, string) *model.Plan); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, model.Workspace, string) *model.Plan); ok {
+		r0 = rf(ctx, w, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Plan)
@@ -28,8 +28,8 @@ func (_m *WorkspaceCheckPlanGetter) GetCheckPlan(ctx context.Context, id string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, model.Workspace, string) error); ok {
+		r1 = rf(ctx, w, id)
 	} else {
 		r1 = ret.Error(1)
 	}

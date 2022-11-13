@@ -22,6 +22,7 @@ type Plan struct {
 	Message    string
 	HasChanges bool
 	Status     PlanStatus
+	URL        string
 
 	// OriginalObject is the object from the original APIs (e.g go-tfe).
 	OriginalObject *tfe.Run
