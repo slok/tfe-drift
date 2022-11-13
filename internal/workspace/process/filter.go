@@ -16,7 +16,7 @@ func NewIncludeNameProcessor(logger log.Logger, regexes []string) (Processor, er
 		return NoopProcessor, nil
 	}
 
-	logger = logger.WithValues(log.Kv{"workspace-processor": "IncludeNameProcessor"})
+	logger = logger.WithValues(log.Kv{"workspace-processor": "IncludeName"})
 	rxs, err := compileRegexes(regexes)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexes: %w", err)
@@ -40,7 +40,7 @@ func NewIncludeNameProcessor(logger log.Logger, regexes []string) (Processor, er
 }
 
 func NewExcludeNameProcessor(logger log.Logger, regexes []string) (Processor, error) {
-	logger = logger.WithValues(log.Kv{"workspace-processor": "ExcludeNameProcessor"})
+	logger = logger.WithValues(log.Kv{"workspace-processor": "ExcludeName"})
 	rxs, err := compileRegexes(regexes)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexes: %w", err)
@@ -69,7 +69,7 @@ func NewLimitMaxProcessor(logger log.Logger, max int) Processor {
 		return NoopProcessor
 	}
 
-	logger = logger.WithValues(log.Kv{"workspace-processor": "LimitMaxProcessor"})
+	logger = logger.WithValues(log.Kv{"workspace-processor": "LimitMax"})
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
 		logger.Infof("Limiting max drift plan detections")
 		if max >= len(wks) {
