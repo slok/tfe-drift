@@ -3,6 +3,7 @@ package process_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -201,6 +202,46 @@ func TestFilterQueuedDriftDetectorProcessor(t *testing.T) {
 			assert := assert.New(t)
 
 			p := process.NewFilterQueuedDriftDetectorProcessor(log.Noop)
+			gotWks, err := p.Process(context.TODO(), test.workspaces)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expWorkspaces, gotWks)
+			}
+		})
+	}
+}
+
+func TestFilterDriftDetectionsBeforeProcessor(t *testing.T) {
+	t0 := time.Now()
+
+	tests := map[string]struct {
+		notBefore     time.Duration
+		workspaces    []model.Workspace
+		expWorkspaces []model.Workspace
+		expErr        bool
+	}{
+		"Having drift plans before the max age should filter them.": {
+			notBefore: 1 * time.Hour,
+			workspaces: []model.Workspace{
+				{Name: "wk1"},
+				{Name: "wk2", LastDriftPlan: &model.Plan{CreatedAt: t0.Add(-1 * 15 * time.Minute)}},
+				{Name: "wk3", LastDriftPlan: &model.Plan{CreatedAt: t0.Add(-1 * 150 * time.Minute)}},
+				{Name: "wk4", LastDriftPlan: &model.Plan{CreatedAt: t0.Add(-1 * 59 * time.Minute)}},
+			},
+			expWorkspaces: []model.Workspace{
+				{Name: "wk1"},
+				{Name: "wk3", LastDriftPlan: &model.Plan{CreatedAt: t0.Add(-1 * 150 * time.Minute)}},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			p := process.NewFilterDriftDetectionsBeforeProcessor(log.Noop, test.notBefore)
 			gotWks, err := p.Process(context.TODO(), test.workspaces)
 
 			if test.expErr {

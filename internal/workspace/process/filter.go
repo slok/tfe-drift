@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/slok/tfe-drift/internal/log"
 	"github.com/slok/tfe-drift/internal/model"
@@ -27,7 +28,7 @@ func NewIncludeNameProcessor(logger log.Logger, regexes []string) (Processor, er
 		newWks := []model.Workspace{}
 		for _, wk := range wks {
 			if !matchStringRegexes(rxs, wk.Name) {
-				logger.WithValues(log.Kv{"workspace": wk.ID}).Debugf("Ignoring workspace")
+				logger.WithValues(log.Kv{"workspace": wk.Name}).Debugf("Ignoring workspace, excluded by name")
 				continue
 			}
 
@@ -51,7 +52,7 @@ func NewExcludeNameProcessor(logger log.Logger, regexes []string) (Processor, er
 		newWks := []model.Workspace{}
 		for _, wk := range wks {
 			if matchStringRegexes(rxs, wk.Name) {
-				logger.WithValues(log.Kv{"workspace": wk.ID}).Debugf("Ignoring workspace")
+				logger.WithValues(log.Kv{"workspace": wk.Name}).Debugf("Ignoring workspace, excluded by name")
 				continue
 			}
 
@@ -63,7 +64,7 @@ func NewExcludeNameProcessor(logger log.Logger, regexes []string) (Processor, er
 }
 
 func NewLimitMaxProcessor(logger log.Logger, max int) Processor {
-	// If 0, then no limit
+	// If 0, then no limit.
 	if max == 0 {
 		return NoopProcessor
 	}
@@ -87,7 +88,31 @@ func NewFilterQueuedDriftDetectorProcessor(logger log.Logger) Processor {
 		newWks := []model.Workspace{}
 		for _, wk := range wks {
 			if wk.LastDriftPlan != nil && wk.LastDriftPlan.Status == model.PlanStatusWaiting {
-				logger.WithValues(log.Kv{"workspace": wk.ID}).Debugf("Ignoring workspace")
+				logger.WithValues(log.Kv{"workspace": wk.Name}).Debugf("Ignoring workspace, drift detection already queued")
+				continue
+			}
+
+			newWks = append(newWks, wk)
+		}
+
+		return newWks, nil
+	})
+}
+
+func NewFilterDriftDetectionsBeforeProcessor(logger log.Logger, notBefore time.Duration) Processor {
+	// If 0, then no filter.
+	if notBefore == 0 {
+		return NoopProcessor
+	}
+
+	logger = logger.WithValues(log.Kv{"workspace-processor": "FilterDriftDetectionsBefore"})
+	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
+		logger.Infof("Filtering drift plan detections executed before %s", notBefore)
+
+		newWks := []model.Workspace{}
+		for _, wk := range wks {
+			if wk.LastDriftPlan != nil && time.Since(wk.LastDriftPlan.CreatedAt) < notBefore {
+				logger.WithValues(log.Kv{"workspace": wk.Name}).Debugf("Ignoring workspace, last drift detection plan was %s (min %s)", time.Since(wk.LastDriftPlan.CreatedAt), notBefore)
 				continue
 			}
 
