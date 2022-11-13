@@ -14,24 +14,24 @@ import (
 	"github.com/slok/tfe-drift/internal/workspace/process/processmock"
 )
 
-func TestHydrateLatestDetectionPlanProcessor(t *testing.T) {
+func TestDriftDetectionPlanProcessor(t *testing.T) {
 	tests := map[string]struct {
-		mock          func(mg *processmock.WorkspaceLatestCheckPlanGetter)
+		mock          func(mc *processmock.WorkspaceCheckPlanCreator)
 		workspaces    []model.Workspace
 		expWorkspaces []model.Workspace
 		expErr        bool
 	}{
-		"Not having workspaces shouldn't fail.": {
-			mock:          func(mg *processmock.WorkspaceLatestCheckPlanGetter) {},
+		"Not having workspaces shouldn't create any plan.": {
+			mock:          func(mc *processmock.WorkspaceCheckPlanCreator) {},
 			workspaces:    []model.Workspace{},
 			expWorkspaces: []model.Workspace{},
 		},
 
-		"Having workspaces should hydrate with the latest drift detection plans.": {
-			mock: func(mg *processmock.WorkspaceLatestCheckPlanGetter) {
-				mg.On("GetLatestCheckPlan", mock.Anything, model.Workspace{ID: "wk1"}).Once().Return(&model.Plan{ID: "p1"}, nil)
-				mg.On("GetLatestCheckPlan", mock.Anything, model.Workspace{ID: "wk2"}).Once().Return(&model.Plan{ID: "p2"}, nil)
-				mg.On("GetLatestCheckPlan", mock.Anything, model.Workspace{ID: "wk3"}).Once().Return(&model.Plan{ID: "p3"}, nil)
+		"Having workspaces should create drift detection plans.": {
+			mock: func(mc *processmock.WorkspaceCheckPlanCreator) {
+				mc.On("CreateCheckPlan", mock.Anything, model.Workspace{ID: "wk1"}, "test").Once().Return(&model.Plan{ID: "p1"}, nil)
+				mc.On("CreateCheckPlan", mock.Anything, model.Workspace{ID: "wk2"}, "test").Once().Return(&model.Plan{ID: "p2"}, nil)
+				mc.On("CreateCheckPlan", mock.Anything, model.Workspace{ID: "wk3"}, "test").Once().Return(&model.Plan{ID: "p3"}, nil)
 			},
 			workspaces: []model.Workspace{{ID: "wk1"}, {ID: "wk2"}, {ID: "wk3"}},
 			expWorkspaces: []model.Workspace{
@@ -41,11 +41,11 @@ func TestHydrateLatestDetectionPlanProcessor(t *testing.T) {
 			},
 		},
 
-		"Having an error while getting latest drift detection plans should not stop the process.": {
-			mock: func(mg *processmock.WorkspaceLatestCheckPlanGetter) {
-				mg.On("GetLatestCheckPlan", mock.Anything, model.Workspace{ID: "wk1"}).Once().Return(&model.Plan{ID: "p1"}, nil)
-				mg.On("GetLatestCheckPlan", mock.Anything, model.Workspace{ID: "wk2"}).Once().Return(nil, fmt.Errorf("something"))
-				mg.On("GetLatestCheckPlan", mock.Anything, model.Workspace{ID: "wk3"}).Once().Return(&model.Plan{ID: "p3"}, nil)
+		"Having an error while create drift detection plans should not stop the process.": {
+			mock: func(mc *processmock.WorkspaceCheckPlanCreator) {
+				mc.On("CreateCheckPlan", mock.Anything, model.Workspace{ID: "wk1"}, "test").Once().Return(&model.Plan{ID: "p1"}, nil)
+				mc.On("CreateCheckPlan", mock.Anything, model.Workspace{ID: "wk2"}, "test").Once().Return(nil, fmt.Errorf("something"))
+				mc.On("CreateCheckPlan", mock.Anything, model.Workspace{ID: "wk3"}, "test").Once().Return(&model.Plan{ID: "p3"}, nil)
 			},
 			workspaces: []model.Workspace{{ID: "wk1"}, {ID: "wk2"}, {ID: "wk3"}},
 			expWorkspaces: []model.Workspace{
@@ -59,10 +59,10 @@ func TestHydrateLatestDetectionPlanProcessor(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
-			mc := processmock.NewWorkspaceLatestCheckPlanGetter(t)
+			mc := processmock.NewWorkspaceCheckPlanCreator(t)
 			test.mock(mc)
 
-			p := process.NewHydrateLatestDetectionPlanProcessor(log.Noop, mc)
+			p := process.NewDriftDetectionPlanProcessor(log.Noop, mc, "test")
 			gotWks, err := p.Process(context.TODO(), test.workspaces)
 
 			if test.expErr {
