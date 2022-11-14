@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	messageIDFmt = "tfe-drift/detector-id/%s"
+	messageIDFmt    = "tfe-drift/detector-id/%s"
+	defaultPageSize = 100
 )
 
 // Repository knows how to manage data on Terraform enterprise or cloud.
@@ -45,7 +46,7 @@ func (r repository) ListWorkspaces(ctx context.Context) ([]model.Workspace, erro
 	// Get all workspaces using client pagination.
 	page := 0
 	for {
-		wks, err := r.c.ListWorkspaces(ctx, r.org, &tfe.WorkspaceListOptions{ListOptions: tfe.ListOptions{PageNumber: page}})
+		wks, err := r.c.ListWorkspaces(ctx, r.org, &tfe.WorkspaceListOptions{ListOptions: tfe.ListOptions{PageSize: defaultPageSize, PageNumber: page}})
 		if err != nil {
 			return nil, fmt.Errorf("could not get all workspaces: %w", err)
 		}
