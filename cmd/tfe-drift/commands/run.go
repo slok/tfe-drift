@@ -26,6 +26,8 @@ type RunCommand struct {
 	planMessage               string
 	includeNameRegexes        []string
 	excludeNameRegexes        []string
+	includeTags               []string
+	excludeTags               []string
 	notBefore                 time.Duration
 	maxPlans                  int
 	waitTimeout               time.Duration
@@ -45,6 +47,8 @@ func NewRunCommand(rootConfig *RootCommand, app *kingpin.Application) *RunComman
 	cmd.Flag("plan-message", "Message to set on the executed drift detection plans.").Short('m').Default("Drift detection").StringVar(&c.planMessage)
 	cmd.Flag("include-name", "Regex that if matches workspace name it will be included in the drift detection (can be repeated).").Short('i').StringsVar(&c.includeNameRegexes)
 	cmd.Flag("exclude-name", "Regex that if matches workspace name it will be excluded from the drift detection (can be repeated).").Short('e').StringsVar(&c.excludeNameRegexes)
+	cmd.Flag("include-tag", "The workspaces that match the tag will be included (can be repeated).").Short('t').StringsVar(&c.includeTags)
+	cmd.Flag("exclude-tag", "The workspaces that match the tag will be excluded (can be repeated).").Short('x').StringsVar(&c.excludeTags)
 	cmd.Flag("limit-max-plans", "The maximum drift detection plans that will be executed.").Short('l').IntVar(&c.maxPlans)
 	cmd.Flag("not-before", "Will filter the workspaces that executed a drift detection plan before before this duration.").Short('n').Default("1h").DurationVar(&c.notBefore)
 	cmd.Flag("wait-timeout", "Max time duration to wait for drift detection plans to finish.").Default("2h").DurationVar(&c.waitTimeout)
@@ -61,6 +65,10 @@ func (c RunCommand) Run(ctx context.Context) error {
 
 	if len(c.excludeNameRegexes) > 0 && len(c.includeNameRegexes) > 0 {
 		return fmt.Errorf("include and exclude name options can't be used at the same time")
+	}
+
+	if len(c.includeTags) > 0 && len(c.excludeTags) > 0 {
+		return fmt.Errorf("include and exclude tag options can't be used at the same time")
 	}
 
 	config := &tfe.Config{
@@ -124,9 +132,14 @@ func (c RunCommand) Run(ctx context.Context) error {
 	}
 
 	// Execute.
-	wks, err := repo.ListWorkspaces(ctx)
+	logger.Infof("Retrieving workspaces")
+	wks, err := repo.ListWorkspaces(ctx, c.includeTags, c.excludeTags)
 	if err != nil {
 		return fmt.Errorf("could not list workspaces: %w", err)
+	}
+
+	if len(wks) == 0 {
+		return fmt.Errorf("0 workspaces selected")
 	}
 
 	chain := wksprocess.NewProcessorChain(wksProcessors)

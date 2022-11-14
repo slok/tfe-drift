@@ -3,6 +3,7 @@ package tfe
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-tfe"
 
@@ -18,7 +19,7 @@ const (
 
 // Repository knows how to manage data on Terraform enterprise or cloud.
 type Repository interface {
-	ListWorkspaces(ctx context.Context) ([]model.Workspace, error)
+	ListWorkspaces(ctx context.Context, includeTags, excludeTags []string) ([]model.Workspace, error)
 	CreateCheckPlan(ctx context.Context, w model.Workspace, message string) (*model.Plan, error)
 	GetCheckPlan(ctx context.Context, w model.Workspace, id string) (*model.Plan, error)
 	GetLatestCheckPlan(ctx context.Context, w model.Workspace) (*model.Plan, error)
@@ -40,13 +41,21 @@ type repository struct {
 	detectorID string
 }
 
-func (r repository) ListWorkspaces(ctx context.Context) ([]model.Workspace, error) {
-	allWks := []*tfe.Workspace{}
+func (r repository) ListWorkspaces(ctx context.Context, includeTags, excludeTags []string) ([]model.Workspace, error) {
+	includeTagsFilter := strings.Join(includeTags, ",")
+	excludeTagsFilter := strings.Join(excludeTags, ",")
 
 	// Get all workspaces using client pagination.
 	page := 0
+	opts := &tfe.WorkspaceListOptions{
+		Tags:        includeTagsFilter,
+		ExcludeTags: excludeTagsFilter,
+		ListOptions: tfe.ListOptions{PageSize: defaultPageSize, PageNumber: page},
+	}
+	allWks := []*tfe.Workspace{}
 	for {
-		wks, err := r.c.ListWorkspaces(ctx, r.org, &tfe.WorkspaceListOptions{ListOptions: tfe.ListOptions{PageSize: defaultPageSize, PageNumber: page}})
+		opts.PageNumber = page
+		wks, err := r.c.ListWorkspaces(ctx, r.org, opts)
 		if err != nil {
 			return nil, fmt.Errorf("could not get all workspaces: %w", err)
 		}
