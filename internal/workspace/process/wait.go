@@ -28,6 +28,8 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 		c := make(chan waitResult)
 
 		for _, wk := range wks {
+			wk := wk
+
 			// If no plan to check, no need to wait.
 			if wk.LastDriftPlan == nil {
 				go func() {
@@ -39,7 +41,6 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 			logger := logger.WithValues(log.Kv{"workspace": wk.Name, "run-id": wk.LastDriftPlan.ID})
 
 			// For each workspace wait concurrently.
-			wk := wk
 			go func() {
 				planID := wk.LastDriftPlan.ID
 				logger.Infof("Waiting for drift detection plan to finish...")
@@ -67,7 +68,7 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 				// Don't stop all the  process for other workspaces because of one workspace error.
 				logger.WithValues(log.Kv{"run-id": res.wk.LastDriftPlan.ID}).Errorf("Error while waiting for drift detection plan: %s", res.err)
 			default:
-				logger.WithValues(log.Kv{"run-id": res.wk.LastDriftPlan.ID}).Infof("Drift detection plan finished without drift")
+				logger.WithValues(log.Kv{"run-id": res.wk.LastDriftPlan.ID}).Infof("Drift detection plan finished")
 			}
 
 			indexedWks[res.wk.ID] = res.wk

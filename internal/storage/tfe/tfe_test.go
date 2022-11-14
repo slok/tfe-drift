@@ -83,7 +83,7 @@ func TestRepositoryListWorkspaces(t *testing.T) {
 			test.mock(mc)
 
 			r, _ := tfe.NewRepository(mc, "test", "https://test-tfe-drift.dev", "test")
-			gotWks, err := r.ListWorkspaces(context.TODO())
+			gotWks, err := r.ListWorkspaces(context.TODO(), nil, nil)
 
 			if test.expErr {
 				assert.Error(err)
