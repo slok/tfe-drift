@@ -31,6 +31,7 @@ type RunCommand struct {
 	waitTimeout          time.Duration
 	disableDriftExitCode bool
 	outFormat            string
+	dryRun               bool
 }
 
 // NewRunCommand returns the Run command.
@@ -43,12 +44,13 @@ func NewRunCommand(rootConfig *RootCommand, app *kingpin.Application) *RunComman
 
 	cmd.Flag("plan-message", "Message to set on the executed drift detection plans.").Short('m').Default("Drift detection").StringVar(&c.planMessage)
 	cmd.Flag("include-name", "Regex that if matches workspace name it will be included in the drift detection (can be repeated).").Short('i').StringsVar(&c.includeNameRegexes)
-	cmd.Flag("exclude-name", "Regex that if matches workspace name it will be excluded from the drift detection (can be repeated)").Short('e').StringsVar(&c.excludeNameRegexes)
-	cmd.Flag("limit-max-plans", "The maximum drift detection plans that will be executed").Short('l').IntVar(&c.maxPlans)
-	cmd.Flag("not-before", "Will filter the workspaces that executed a drift detection plan before before this duration").Short('n').Default("1h").DurationVar(&c.notBefore)
-	cmd.Flag("wait-timeout", "Max time duration to wait for drift detection plans to finish").Default("2h").DurationVar(&c.waitTimeout)
-	cmd.Flag("disable-drift-exitcode", "Will disable the exit code (!0) when there are changes on a drift detection plan").BoolVar(&c.disableDriftExitCode)
-	cmd.Flag("out-format", "Selects the format of the result output").EnumVar(&c.outFormat, outFormatJSON)
+	cmd.Flag("exclude-name", "Regex that if matches workspace name it will be excluded from the drift detection (can be repeated).").Short('e').StringsVar(&c.excludeNameRegexes)
+	cmd.Flag("limit-max-plans", "The maximum drift detection plans that will be executed.").Short('l').IntVar(&c.maxPlans)
+	cmd.Flag("not-before", "Will filter the workspaces that executed a drift detection plan before before this duration.").Short('n').Default("1h").DurationVar(&c.notBefore)
+	cmd.Flag("wait-timeout", "Max time duration to wait for drift detection plans to finish.").Default("2h").DurationVar(&c.waitTimeout)
+	cmd.Flag("disable-drift-exitcode", "Will disable the exit code (!0) when there are changes on a drift detection plan.").BoolVar(&c.disableDriftExitCode)
+	cmd.Flag("out-format", "Selects the format of the result output.").Short('o').EnumVar(&c.outFormat, outFormatJSON)
+	cmd.Flag("dry-run", "Will execute all the process without creating any drift detection plans, will use latest ones available.").BoolVar(&c.dryRun)
 
 	return c
 }
@@ -76,6 +78,10 @@ func (c RunCommand) Run(ctx context.Context) error {
 	repo, err := tfestorage.NewRepository(repoTFEClient, c.rootConfig.TFEOrg, c.rootConfig.TFEAddress, c.rootConfig.AppID)
 	if err != nil {
 		return fmt.Errorf("could not create tfe storage repository: %w", err)
+	}
+
+	if c.dryRun {
+		repo = tfestorage.NewDryRunRepository(logger, repo)
 	}
 
 	var includeProcessor process.Processor = process.NoopProcessor
@@ -122,6 +128,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not list workspaces: %w", err)
 	}
+
 	chain := wksprocess.NewProcessorChain(wksProcessors)
 	_, err = chain.Process(ctx, wks)
 	if err != nil {
