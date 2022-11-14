@@ -75,6 +75,16 @@ func waitForPlan(ctx context.Context, g WorkspaceCheckPlanGetter, wk model.Works
 	ctx, cancel := context.WithTimeout(ctx, timeoutDur)
 	defer cancel()
 
+	// Try getting the first time.
+	plan, err := g.GetCheckPlan(ctx, wk, planID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get check plan %q: %w", planID, err)
+	}
+	if plan.Status != model.PlanStatusWaiting {
+		return plan, nil
+	}
+
+	// Wait polling in regular intervals.
 	ticker := time.NewTicker(pollingDur)
 	for {
 		select {

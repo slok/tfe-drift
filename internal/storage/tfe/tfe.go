@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-tfe"
 
 	"github.com/slok/tfe-drift/internal/internalerrors"
+	"github.com/slok/tfe-drift/internal/log"
 	"github.com/slok/tfe-drift/internal/model"
 )
 
@@ -179,4 +180,21 @@ func mapTFEStatus2Model(s tfe.RunStatus) model.PlanStatus {
 	default:
 		return model.PlanStatusUnknown
 	}
+}
+
+func NewDryRunRepository(logger log.Logger, repo Repository) Repository {
+	return dryRunRepository{
+		Repository: repo,
+		logger:     logger,
+	}
+}
+
+type dryRunRepository struct {
+	Repository
+	logger log.Logger
+}
+
+func (r dryRunRepository) CreateCheckPlan(ctx context.Context, wk model.Workspace, message string) (*model.Plan, error) {
+	r.logger.Warningf("Not creating drift detection plan due to dry-run. Using latest drift detection plan instead")
+	return r.GetLatestCheckPlan(ctx, wk)
 }
