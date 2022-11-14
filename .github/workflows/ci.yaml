@@ -59,3 +59,26 @@ jobs:
         run: docker login ghcr.io -u ${{ github.actor }} -p "${{ secrets.GITHUB_TOKEN }}"
       - name: Build and publish docker images
         run: make build-publish-image-all
+
+  tagged-release-binaries:
+    # Only on tags.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [check, unit-test]
+    name: Tagged release binaries
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "VERSION=${GITHUB_REF#refs/*/}" >> ${GITHUB_ENV} # Sets VERSION env var.
+      - uses: actions/checkout@v3
+      - name: Build binaries
+        run: |
+          mkdir -p ./bin
+          chmod -R 0777 ./bin
+          make build-all
+      - name: Upload binaries
+        uses: xresloader/upload-to-github-release@v1.3.7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: "bin/*"
+          tags: true
+          draft: true
