@@ -12,34 +12,40 @@ import (
 	"github.com/slok/tfe-drift/internal/model"
 )
 
-func NewDriftDetectionPlansResultProcessor(logger log.Logger, noErrorOnDrift bool) Processor {
+func NewDriftDetectionPlansResultProcessor(logger log.Logger, noErrorDriftPlans bool) Processor {
 	logger = logger.WithValues(log.Kv{"workspace-processor": "DriftDetectionPlansResult"})
 
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
 		hasChanges := false
 		hasErrors := false
 		for _, wk := range wks {
+			var driftPlan model.Plan
+			if wk.LastDriftPlan != nil {
+				driftPlan = *wk.LastDriftPlan
+			}
+
 			logger := logger.WithValues(log.Kv{
 				"workspace": wk.Name,
-				"run-id":    wk.LastDriftPlan.ID,
-				"run-url":   wk.LastDriftPlan.URL,
+				"run-id":    driftPlan.ID,
+				"run-url":   driftPlan.URL,
 			})
 
 			switch {
-			case wk.LastDriftPlan.HasChanges:
+			case driftPlan.HasChanges:
 				hasChanges = true
 				logger.Warningf("Drift detected")
-			case wk.LastDriftPlan.Status == model.PlanStatusFinishedNotOK:
+			case driftPlan.Status == model.PlanStatusFinishedNotOK:
 				hasErrors = true
 				logger.Warningf("Drift detection plan failed")
 			}
 		}
 
-		if !noErrorOnDrift && hasChanges {
+		switch {
+		case noErrorDriftPlans:
+			return wks, nil
+		case hasChanges:
 			return nil, internalerrors.ErrDriftDetected
-		}
-
-		if hasErrors {
+		case hasErrors:
 			return nil, internalerrors.ErrDriftDetectionPlanFailed
 		}
 
@@ -69,21 +75,26 @@ func NewDetailedJSONResultProcessor(out io.Writer) Processor {
 		driftError := false
 		workspaces := map[string]jsonResultWorkspace{}
 		for _, wk := range wks {
+			var driftPlan model.Plan
+			if wk.LastDriftPlan != nil {
+				driftPlan = *wk.LastDriftPlan
+			}
+
 			jrwk := jsonResultWorkspace{
 				Name:                    wk.Name,
 				ID:                      wk.ID,
-				DriftDetectionRunID:     wk.LastDriftPlan.ID,
-				DriftDetectionRunURL:    wk.LastDriftPlan.URL,
-				Drift:                   wk.LastDriftPlan.HasChanges,
-				DriftDetectionPlanError: wk.LastDriftPlan.Status == model.PlanStatusFinishedNotOK,
+				DriftDetectionRunID:     driftPlan.ID,
+				DriftDetectionRunURL:    driftPlan.URL,
+				Drift:                   driftPlan.HasChanges,
+				DriftDetectionPlanError: driftPlan.Status == model.PlanStatusFinishedNotOK,
 			}
 
-			if wk.LastDriftPlan.HasChanges {
+			if driftPlan.HasChanges {
 				drift = true
 				jrwk.Drift = true
 			}
 
-			if wk.LastDriftPlan.Status == model.PlanStatusFinishedNotOK {
+			if driftPlan.Status == model.PlanStatusFinishedNotOK {
 				driftError = true
 				jrwk.DriftDetectionPlanError = true
 			}

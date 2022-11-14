@@ -26,7 +26,7 @@ func NewDriftDetectionPlanProcessor(logger log.Logger, c WorkspaceCheckPlanCreat
 			if err != nil {
 				// TODO(slok): Add strict as an option so we can fail or not based on this option.
 				// Don't stop all the  process for other workspaces because of one workspace error.
-				logger.Errorf("Could not create drift detection plan: %w", err)
+				logger.Errorf("Could not create drift detection plan: %s", err)
 			} else {
 				createdPlans++
 				wk.LastDriftPlan = plan

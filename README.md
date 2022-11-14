@@ -30,7 +30,7 @@ Automated Terraform Cloud/Enterprise drift detection.
 Execute with safe defaults and get the result output in JSON:
 
 ```bash
-tfe-drift run  -o json
+tfe-drift run -o json
 ```
 
 Limit to a max of 2 executed plans, ignore workspace drift detections that have been already executed in the last 2h, and exclude dns workspace:

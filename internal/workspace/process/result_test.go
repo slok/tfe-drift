@@ -56,7 +56,7 @@ func TestDriftDetectionPlansResultProcessor(t *testing.T) {
 			workspaces: []model.Workspace{
 				{ID: "wk1", LastDriftPlan: &model.Plan{ID: "p1", HasChanges: false}},
 				{ID: "wk2", LastDriftPlan: &model.Plan{ID: "p2", HasChanges: true}},
-				{ID: "wk3", LastDriftPlan: &model.Plan{ID: "p3", HasChanges: false}},
+				{ID: "wk3", LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedNotOK}},
 			},
 			expErr: false,
 		},
