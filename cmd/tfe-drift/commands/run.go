@@ -112,7 +112,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 	wksProcessors := []wksprocess.Processor{
 		includeProcessor,
 		excludeProcessor,
-		wksprocess.NewHydrateLatestDetectionPlanProcessor(logger, repo),
+		wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, logger, repo),
 		wksprocess.NewFilterQueuedDriftDetectorProcessor(logger),
 		wksprocess.NewFilterDriftDetectionsBeforeProcessor(logger, c.notBefore),
 		wksprocess.NewSortByOldestDetectionPlanProcessor(logger),
