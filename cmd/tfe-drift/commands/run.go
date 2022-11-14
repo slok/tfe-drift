@@ -23,15 +23,15 @@ type RunCommand struct {
 	cmd        *kingpin.CmdClause
 	rootConfig *RootCommand
 
-	planMessage          string
-	includeNameRegexes   []string
-	excludeNameRegexes   []string
-	notBefore            time.Duration
-	maxPlans             int
-	waitTimeout          time.Duration
-	disableDriftExitCode bool
-	outFormat            string
-	dryRun               bool
+	planMessage               string
+	includeNameRegexes        []string
+	excludeNameRegexes        []string
+	notBefore                 time.Duration
+	maxPlans                  int
+	waitTimeout               time.Duration
+	disableDriftPlanExitCodes bool
+	outFormat                 string
+	dryRun                    bool
 }
 
 // NewRunCommand returns the Run command.
@@ -48,7 +48,7 @@ func NewRunCommand(rootConfig *RootCommand, app *kingpin.Application) *RunComman
 	cmd.Flag("limit-max-plans", "The maximum drift detection plans that will be executed.").Short('l').IntVar(&c.maxPlans)
 	cmd.Flag("not-before", "Will filter the workspaces that executed a drift detection plan before before this duration.").Short('n').Default("1h").DurationVar(&c.notBefore)
 	cmd.Flag("wait-timeout", "Max time duration to wait for drift detection plans to finish.").Default("2h").DurationVar(&c.waitTimeout)
-	cmd.Flag("disable-drift-exitcode", "Will disable the exit code (!0) when there are changes on a drift detection plan.").BoolVar(&c.disableDriftExitCode)
+	cmd.Flag("disable-drift-plan-exitcodes", "Will disable the drift detection plans related exit codes (2 and 3).").BoolVar(&c.disableDriftPlanExitCodes)
 	cmd.Flag("out-format", "Selects the format of the result output.").Short('o').EnumVar(&c.outFormat, outFormatJSON)
 	cmd.Flag("dry-run", "Will execute all the process without creating any drift detection plans, will use latest ones available.").BoolVar(&c.dryRun)
 
@@ -120,7 +120,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 		wksprocess.NewDriftDetectionPlanProcessor(logger, repo, c.planMessage),
 		wksprocess.NewDriftDetectionPlanWaitProcessor(logger, repo, waitPolling, c.waitTimeout),
 		resultOutProcessor,
-		wksprocess.NewDriftDetectionPlansResultProcessor(logger, c.disableDriftExitCode),
+		wksprocess.NewDriftDetectionPlansResultProcessor(logger, c.disableDriftPlanExitCodes),
 	}
 
 	// Execute.
