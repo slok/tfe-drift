@@ -62,7 +62,7 @@ func TestHydrateLatestDetectionPlanProcessor(t *testing.T) {
 			mc := processmock.NewWorkspaceLatestCheckPlanGetter(t)
 			test.mock(mc)
 
-			p := process.NewHydrateLatestDetectionPlanProcessor(log.Noop, mc)
+			p := process.NewHydrateLatestDetectionPlanProcessor(context.TODO(), log.Noop, mc)
 			gotWks, err := p.Process(context.TODO(), test.workspaces)
 
 			if test.expErr {

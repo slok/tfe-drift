@@ -25,6 +25,10 @@ Automated Terraform Cloud/Enterprise drift detection.
 - Compatible with Terraform Cloud and Terraform Enterprise.
 - Easy and simple to use.
 
+## Why
+
+Terraform cloud offers it's own [drift detector](https://www.hashicorp.com/campaign/drift-detection-for-terraform-cloud) (Looks awesome BTW), however, this feature it's not available for non "Business" tiers.
+
 ## Getting started
 
 Execute with safe defaults and get the result output in JSON:
