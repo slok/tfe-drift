@@ -33,7 +33,7 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 			wk := wk
 			go func() {
 				planID := wk.LastDriftPlan.ID
-				logger.Infof("Waiting for drift detection plan to finish")
+				logger.Infof("Waiting for drift detection plan to finish...")
 
 				plan, err := waitForPlan(ctx, g, wk, planID, pollingDuration, timeoutDuration)
 				if err == nil {
@@ -48,6 +48,8 @@ func NewDriftDetectionPlanWaitProcessor(logger log.Logger, g WorkspaceCheckPlanG
 		indexedWks := map[string]model.Workspace{}
 		for i := 0; i < len(wks); i++ {
 			res := <-c
+			logger := logger.WithValues(log.Kv{"workspace": res.wk.Name, "run-id": res.wk.LastDriftPlan.ID})
+
 			if res.err != nil {
 				// TODO(slok): Add strict as an option so we can fail or not based on this option.
 				// Don't stop all the  process for other workspaces because of one workspace error.
