@@ -42,6 +42,15 @@ func TestDriftDetectionPlansResultProcessor(t *testing.T) {
 			expErr: true,
 		},
 
+		"Having a workspace with plan errors should fail.": {
+			workspaces: []model.Workspace{
+				{ID: "wk1", LastDriftPlan: &model.Plan{ID: "p1", Status: model.PlanStatusFinishedOK}},
+				{ID: "wk2", LastDriftPlan: &model.Plan{ID: "p2", Status: model.PlanStatusFinishedNotOK}},
+				{ID: "wk3", LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedOK}},
+			},
+			expErr: true,
+		},
+
 		"Having a workspace with changes but with no error on drift option, should not fail.": {
 			noErrorOnDrift: true,
 			workspaces: []model.Workspace{
@@ -76,15 +85,20 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 		expErr         bool
 	}{
 		"Not having workspaces shouldn't error.": {
-			workspaces:     []model.Workspace{},
-			expResultRegex: regexp.MustCompile(`{\n\t"workspaces": {},\n\t"drift": false,\n\t"created_at": ".*"\n}`),
+			workspaces: []model.Workspace{},
+			expResultRegex: regexp.MustCompile(`{
+	"workspaces": {},
+	"drift": false,
+	"drift_detection_plan_error": false,
+	"created_at": ".*"
+}`),
 		},
 
 		"Having workspaces should return the result.": {
 			workspaces: []model.Workspace{
 				{ID: "wk1", Name: "wk1", LastDriftPlan: &model.Plan{ID: "p1", HasChanges: false}},
 				{ID: "wk2", Name: "wk2", LastDriftPlan: &model.Plan{ID: "p2", HasChanges: true}},
-				{ID: "wk3", Name: "wk3", LastDriftPlan: &model.Plan{ID: "p3", HasChanges: false}},
+				{ID: "wk3", Name: "wk3", LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedNotOK}},
 			},
 			expResultRegex: regexp.MustCompile(`{
 	"workspaces": {
@@ -93,24 +107,28 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"id": "wk1",
 			"drift_detection_run_id": "p1",
 			"drift_detection_run_url": "",
-			"drift": false
+			"drift": false,
+			"drift_detection_plan_error": false
 		},
 		"wk2": {
 			"name": "wk2",
 			"id": "wk2",
 			"drift_detection_run_id": "p2",
 			"drift_detection_run_url": "",
-			"drift": true
+			"drift": true,
+			"drift_detection_plan_error": false
 		},
 		"wk3": {
 			"name": "wk3",
 			"id": "wk3",
 			"drift_detection_run_id": "p3",
 			"drift_detection_run_url": "",
-			"drift": false
+			"drift": false,
+			"drift_detection_plan_error": true
 		}
 	},
 	"drift": true,
+	"drift_detection_plan_error": true,
 	"created_at": ".*"
 }`),
 		},

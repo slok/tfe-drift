@@ -17,17 +17,30 @@ func NewDriftDetectionPlansResultProcessor(logger log.Logger, noErrorOnDrift boo
 
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
 		hasChanges := false
+		hasErrors := false
 		for _, wk := range wks {
-			logger := logger.WithValues(log.Kv{"workspace": wk.Name, "run-id": wk.LastDriftPlan.ID})
+			logger := logger.WithValues(log.Kv{
+				"workspace": wk.Name,
+				"run-id":    wk.LastDriftPlan.ID,
+				"run-url":   wk.LastDriftPlan.URL,
+			})
 
-			if wk.LastDriftPlan.HasChanges {
+			switch {
+			case wk.LastDriftPlan.HasChanges:
 				hasChanges = true
 				logger.Warningf("Drift detected")
+			case wk.LastDriftPlan.Status == model.PlanStatusFinishedNotOK:
+				hasErrors = true
+				logger.Warningf("Drift detection plan failed")
 			}
 		}
 
 		if !noErrorOnDrift && hasChanges {
 			return nil, internalerrors.ErrDriftDetected
+		}
+
+		if hasErrors {
+			return nil, internalerrors.ErrDriftDetectionPlanFailed
 		}
 
 		return wks, nil
@@ -36,39 +49,53 @@ func NewDriftDetectionPlansResultProcessor(logger log.Logger, noErrorOnDrift boo
 
 func NewDetailedJSONResultProcessor(out io.Writer) Processor {
 	type jsonResultWorkspace struct {
-		Name                 string `json:"name"`
-		ID                   string `json:"id"`
-		DriftDetectionRunID  string `json:"drift_detection_run_id"`
-		DriftDetectionRunURL string `json:"drift_detection_run_url"`
-		Drift                bool   `json:"drift"`
+		Name                    string `json:"name"`
+		ID                      string `json:"id"`
+		DriftDetectionRunID     string `json:"drift_detection_run_id"`
+		DriftDetectionRunURL    string `json:"drift_detection_run_url"`
+		Drift                   bool   `json:"drift"`
+		DriftDetectionPlanError bool   `json:"drift_detection_plan_error"`
 	}
 
 	type jsonResult struct {
-		Workspaces map[string]jsonResultWorkspace `json:"workspaces"`
-		Drift      bool                           `json:"drift"`
-		CreatedAt  time.Time                      `json:"created_at"`
+		Workspaces              map[string]jsonResultWorkspace `json:"workspaces"`
+		Drift                   bool                           `json:"drift"`
+		DriftDetectionPlanError bool                           `json:"drift_detection_plan_error"`
+		CreatedAt               time.Time                      `json:"created_at"`
 	}
 
 	return ProcessorFunc(func(ctx context.Context, wks []model.Workspace) ([]model.Workspace, error) {
 		drift := false
+		driftError := false
 		workspaces := map[string]jsonResultWorkspace{}
 		for _, wk := range wks {
+			jrwk := jsonResultWorkspace{
+				Name:                    wk.Name,
+				ID:                      wk.ID,
+				DriftDetectionRunID:     wk.LastDriftPlan.ID,
+				DriftDetectionRunURL:    wk.LastDriftPlan.URL,
+				Drift:                   wk.LastDriftPlan.HasChanges,
+				DriftDetectionPlanError: wk.LastDriftPlan.Status == model.PlanStatusFinishedNotOK,
+			}
+
 			if wk.LastDriftPlan.HasChanges {
 				drift = true
+				jrwk.Drift = true
 			}
-			workspaces[wk.Name] = jsonResultWorkspace{
-				Name:                 wk.Name,
-				ID:                   wk.ID,
-				DriftDetectionRunID:  wk.LastDriftPlan.ID,
-				DriftDetectionRunURL: wk.LastDriftPlan.URL,
-				Drift:                wk.LastDriftPlan.HasChanges,
+
+			if wk.LastDriftPlan.Status == model.PlanStatusFinishedNotOK {
+				driftError = true
+				jrwk.DriftDetectionPlanError = true
 			}
+
+			workspaces[wk.Name] = jrwk
 		}
 
 		root := jsonResult{
-			Workspaces: workspaces,
-			Drift:      drift,
-			CreatedAt:  time.Now().UTC(),
+			Workspaces:              workspaces,
+			Drift:                   drift,
+			DriftDetectionPlanError: driftError,
+			CreatedAt:               time.Now().UTC(),
 		}
 		data, err := json.MarshalIndent(root, "", "\t")
 		if err != nil {
