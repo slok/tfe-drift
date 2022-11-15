@@ -32,6 +32,16 @@ Automated Terraform Cloud/Enterprise drift detection.
 - Terraform cloud/enterprise API token: Use `--tfe-token` or `TFE_DRIFT_TFE_TOKEN` env var.
 - Terraform cloud/enterprise organization: Use `--tfe-organization` or `TFE_DRIFT_TFE_ORGANIZATION` env var.
 
+```bash
+tfe-drift run --limit-max-plan 5
+```
+
+## Usage
+
+### Binary
+
+Get the binary from the [releases](https://github.com/slok/tfe-drift/releases) first.
+
 Execute in dry run mode to see what would be the workspaces affected:
 
 ```bash
@@ -50,6 +60,37 @@ Limit to a max of 2 executed plans, ignore workspace drift detections that have 
 tfe-drift run --exclude dns --not-before 2h --limit-max-plan 2
 ```
 
+### Docker
+
+You can use the released [docker images](https://github.com/slok/tfe-drift/pkgs/container/tfe-drift).
+
+```bash
+docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/tfe-drift:v0.1.0 run --help
+```
+
+### Github actions
+
+You can use [tfe-drift github action][tfe-driftgh-actions]
+
+```yaml
+name: drift-detection
+
+on:
+  schedule:
+    - cron:  '0 * * * *' # Every hour.
+
+jobs:
+  drift-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: slok/tfe-drift-action@v0.1.0
+        id: tfe-drift
+        with:
+          tfe-token: ${{ secrets.TFE_TOKEN }}
+          tfe-org: slok
+          limit-max-plans: 3
+```
+
 ## F.A.Q
 
 ### How is a drift detection executed?
@@ -66,7 +107,7 @@ From now on, it will use this ID to get the workspaces drift detection plans and
 
 If the executed drift detection terraform plan has changes, its a drift!
 
-## Why? Hashicorp recently announced [Drift detection][drift-detection]
+### Why? Hashicorp recently announced [Drift detection][drift-detection]
 
 Terraform cloud offers it's own [drift detector][drift-detection](Looks awesome!), however, this feature it's not available for non "Business" tiers.
 
@@ -82,11 +123,13 @@ Using a combination of different strategies:
 
 - Don't run already running/queued drift detection runs.
 - Don't run the workspaces where the drift detections has been executed in the last T time (e.g: 12h).
-- Prioritizing the workspaces wit no previous drift-detections or the ones.
+- Prioritizing the workspaces with oldest drift detections or without previous ones.
 
 ### Can be used with CI and crons (e.g: github action)?
 
-You should! :) Has been designed with that in mind:
+You should! :) You even have a ready to use [github action][tfe-driftgh-actions].
+
+It has been designed with that in mind:
 
 Having a cron job that executes tfe-drift regularly (e.g 1h) with a limited number of plans at the same time.
 
@@ -150,3 +193,4 @@ Look at this example:
 ```
 
 [drift-detection]: https://www.hashicorp.com/campaign/drift-detection-for-terraform-cloud
+[tfe-driftgh-actions]: https://github.com/marketplace/actions/terraform-cloud-enterprise-drift-detection
