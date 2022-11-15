@@ -147,7 +147,14 @@ It will return a json output summary so you can use it to notify or extend with 
 
 Optionally you can disable 2 and 3 exit codes in case you want to handle the drif/detection errors with the JSON summary by pipelining other applications or scripting.
 
-### Summary JSON format?
+### Output formats?
+
+By default, only the logger information will be written, however you can use `-o` to select an output format, the ones available are:
+
+- `json`: Non-indenten JSON.
+- `pretty-json`: Indented JSON.
+
+### Result JSON format?
 
 Look at this example:
 

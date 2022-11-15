@@ -139,7 +139,7 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			assert := assert.New(t)
 
 			var b bytes.Buffer
-			p := process.NewDetailedJSONResultProcessor(&b)
+			p := process.NewDetailedJSONResultProcessor(&b, true)
 			_, err := p.Process(context.TODO(), test.workspaces)
 
 			if test.expErr {
