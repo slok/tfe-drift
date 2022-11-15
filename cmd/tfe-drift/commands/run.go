@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-tfe"
@@ -45,10 +46,10 @@ func NewRunCommand(rootConfig *RootCommand, app *kingpin.Application) *RunComman
 	}
 
 	cmd.Flag("plan-message", "Message to set on the executed drift detection plans.").Short('m').Default("Drift detection").StringVar(&c.planMessage)
-	cmd.Flag("include-name", "Regex that if matches workspace name it will be included in the drift detection (can be repeated).").Short('i').StringsVar(&c.includeNameRegexes)
-	cmd.Flag("exclude-name", "Regex that if matches workspace name it will be excluded from the drift detection (can be repeated).").Short('e').StringsVar(&c.excludeNameRegexes)
-	cmd.Flag("include-tag", "The workspaces that match the tag will be included (can be repeated).").Short('t').StringsVar(&c.includeTags)
-	cmd.Flag("exclude-tag", "The workspaces that match the tag will be excluded (can be repeated).").Short('x').StringsVar(&c.excludeTags)
+	cmd.Flag("include-name", "Regex that if matches workspace name it will be included in the drift detection (can be repeated or comma separated).").Short('i').StringsVar(&c.includeNameRegexes)
+	cmd.Flag("exclude-name", "Regex that if matches workspace name it will be excluded from the drift detection (can be repeated or comma separated).").Short('e').StringsVar(&c.excludeNameRegexes)
+	cmd.Flag("include-tag", "The workspaces that match the tag will be included (can be repeated or comma separated).").Short('t').StringsVar(&c.includeTags)
+	cmd.Flag("exclude-tag", "The workspaces that match the tag will be excluded (can be repeated or comma separated).").Short('x').StringsVar(&c.excludeTags)
 	cmd.Flag("limit-max-plans", "The maximum drift detection plans that will be executed.").Short('l').IntVar(&c.maxPlans)
 	cmd.Flag("not-before", "Will filter the workspaces that executed a drift detection plan before before this duration.").Short('n').Default("1h").DurationVar(&c.notBefore)
 	cmd.Flag("wait-timeout", "Max time duration to wait for drift detection plans to finish.").Default("2h").DurationVar(&c.waitTimeout)
@@ -70,6 +71,13 @@ func (c RunCommand) Run(ctx context.Context) error {
 	if len(c.includeTags) > 0 && len(c.excludeTags) > 0 {
 		return fmt.Errorf("include and exclude tag options can't be used at the same time")
 	}
+
+	// Sanitize names and tags by splitting using commas.
+	const repeatedArgSplitChar = ","
+	excludeNameRegexes := splitRepeatedArg(c.excludeNameRegexes, repeatedArgSplitChar)
+	includeNameRegexes := splitRepeatedArg(c.includeNameRegexes, repeatedArgSplitChar)
+	includeTags := splitRepeatedArg(c.includeTags, repeatedArgSplitChar)
+	excludeTags := splitRepeatedArg(c.excludeTags, repeatedArgSplitChar)
 
 	config := &tfe.Config{
 		Token:   c.rootConfig.TFEToken,
@@ -93,8 +101,8 @@ func (c RunCommand) Run(ctx context.Context) error {
 	}
 
 	var includeProcessor process.Processor = process.NoopProcessor
-	if len(c.includeNameRegexes) > 0 {
-		p, err := wksprocess.NewIncludeNameProcessor(logger, c.includeNameRegexes)
+	if len(includeNameRegexes) > 0 {
+		p, err := wksprocess.NewIncludeNameProcessor(logger, includeNameRegexes)
 		if err != nil {
 			return fmt.Errorf("invalid include processor: %w", err)
 		}
@@ -102,8 +110,8 @@ func (c RunCommand) Run(ctx context.Context) error {
 	}
 
 	var excludeProcessor process.Processor = process.NoopProcessor
-	if len(c.excludeNameRegexes) > 0 {
-		p, err := wksprocess.NewExcludeNameProcessor(logger, c.excludeNameRegexes)
+	if len(excludeNameRegexes) > 0 {
+		p, err := wksprocess.NewExcludeNameProcessor(logger, excludeNameRegexes)
 		if err != nil {
 			return fmt.Errorf("invalid exclude processor: %w", err)
 		}
@@ -133,7 +141,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 
 	// Execute.
 	logger.Infof("Retrieving workspaces")
-	wks, err := repo.ListWorkspaces(ctx, c.includeTags, c.excludeTags)
+	wks, err := repo.ListWorkspaces(ctx, includeTags, excludeTags)
 	if err != nil {
 		return fmt.Errorf("could not list workspaces: %w", err)
 	}
@@ -149,4 +157,14 @@ func (c RunCommand) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// splitRepeatedArg will split the strings inside each repeated arg and return flatten.
+func splitRepeatedArg(ss []string, c string) []string {
+	newSS := []string{}
+	for _, s := range ss {
+		newSS = append(newSS, strings.Split(s, c)...)
+	}
+
+	return newSS
 }

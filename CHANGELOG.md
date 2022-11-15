@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- include and exclude name repeatable flags, now can use commas to split a single argument.
+- include and exclude tag repeatable flags, now can use commas to split a single argument.
+
 ## [v0.1.0] - 2022-11-14
 
 ### Added
