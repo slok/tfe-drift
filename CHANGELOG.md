@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v0.2.0] - 2022-11-15
+
 ### Added
 
 - Include and exclude name repeatable flags, now can use commas to split a single argument.
@@ -28,5 +30,6 @@
 - Different exit codes depending on the result of the run.
 - Dry-run mode.
 
-[unreleased]: https://github.com/slok/tfe-drift/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/slok/tfe-drift/compare/v0.2.0...HEAD
+[v0.2.0]: https://github.com/slok/tfe-drift/compare/v0.1.0...v0.2.0
 [v0.1.0]: https://github.com/slok/tfe-drift/releases/tag/v0.1.0
