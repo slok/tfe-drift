@@ -88,7 +88,8 @@ jobs:
         with:
           tfe-token: ${{ secrets.TFE_TOKEN }}
           tfe-org: slok
-          limit-max-plans: 3
+          limit-max-plans: 3 # Avoid queuing lots of speculative plans.
+          not-before: 24h # A drift detection per day it's enough.
 ```
 
 ## F.A.Q
