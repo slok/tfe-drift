@@ -53,7 +53,7 @@ func NewDriftDetectionPlansResultProcessor(logger log.Logger, noErrorDriftPlans 
 	})
 }
 
-func NewDetailedJSONResultProcessor(out io.Writer) Processor {
+func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 	type jsonResultWorkspace struct {
 		Name                    string `json:"name"`
 		ID                      string `json:"id"`
@@ -108,7 +108,8 @@ func NewDetailedJSONResultProcessor(out io.Writer) Processor {
 			DriftDetectionPlanError: driftError,
 			CreatedAt:               time.Now().UTC(),
 		}
-		data, err := json.MarshalIndent(root, "", "\t")
+
+		data, err := marshallJSON(root, pretty)
 		if err != nil {
 			return nil, fmt.Errorf("the result could not be marshaled in JSON: %w", err)
 		}
@@ -120,4 +121,11 @@ func NewDetailedJSONResultProcessor(out io.Writer) Processor {
 
 		return wks, nil
 	})
+}
+
+func marshallJSON(obj interface{}, pretty bool) ([]byte, error) {
+	if pretty {
+		return json.MarshalIndent(obj, "", "\t")
+	}
+	return json.Marshal(obj)
 }

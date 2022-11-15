@@ -4,8 +4,14 @@
 
 ### Added
 
-- include and exclude name repeatable flags, now can use commas to split a single argument.
-- include and exclude tag repeatable flags, now can use commas to split a single argument.
+- Include and exclude name repeatable flags, now can use commas to split a single argument.
+- Include and exclude tag repeatable flags, now can use commas to split a single argument.
+- Add `pretty-json` as indented JSON output format.
+- Add `json` as non-indented JSON output format.
+
+### Changed
+
+- `json` output format now is non-indented JSON.
 
 ## [v0.1.0] - 2022-11-14
 

@@ -17,7 +17,8 @@ import (
 var (
 	waitPolling = 15 * time.Second
 
-	outFormatJSON = "json"
+	outFormatJSON       = "json"
+	outFormatPrettyJSON = "pretty-json"
 )
 
 type RunCommand struct {
@@ -54,7 +55,7 @@ func NewRunCommand(rootConfig *RootCommand, app *kingpin.Application) *RunComman
 	cmd.Flag("not-before", "Will filter the workspaces that executed a drift detection plan before before this duration.").Short('n').Default("1h").DurationVar(&c.notBefore)
 	cmd.Flag("wait-timeout", "Max time duration to wait for drift detection plans to finish.").Default("2h").DurationVar(&c.waitTimeout)
 	cmd.Flag("disable-drift-plan-exitcodes", "Will disable the drift detection plans related exit codes (2 and 3).").BoolVar(&c.disableDriftPlanExitCodes)
-	cmd.Flag("out-format", "Selects the format of the result output.").Short('o').EnumVar(&c.outFormat, outFormatJSON)
+	cmd.Flag("out-format", "Selects the format of the result output.").Short('o').EnumVar(&c.outFormat, outFormatJSON, outFormatPrettyJSON)
 	cmd.Flag("dry-run", "Will execute all the process without creating any drift detection plans, will use latest ones available.").BoolVar(&c.dryRun)
 
 	return c
@@ -121,8 +122,9 @@ func (c RunCommand) Run(ctx context.Context) error {
 	var resultOutProcessor process.Processor = process.NoopProcessor
 	switch c.outFormat {
 	case outFormatJSON:
-		resultOutProcessor = wksprocess.NewDetailedJSONResultProcessor(c.rootConfig.Stdout)
-
+		resultOutProcessor = wksprocess.NewDetailedJSONResultProcessor(c.rootConfig.Stdout, false)
+	case outFormatPrettyJSON:
+		resultOutProcessor = wksprocess.NewDetailedJSONResultProcessor(c.rootConfig.Stdout, true)
 	}
 
 	wksProcessors := []wksprocess.Processor{
