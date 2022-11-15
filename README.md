@@ -21,7 +21,7 @@ Automated Terraform Cloud/Enterprise drift detection.
 - Filter drift detections by workspace.
 - Ignore if drift detection plan not required (already running, executed recently...)
 - Result of the detection plans summary as output to automate with other apps.
-- Easy to automate with CI (e.g Github actions).
+- Easy to automate with CI (It comes with a ready to use [Github action][tfe-drift-gh-actions]).
 - Compatible with Terraform Cloud and Terraform Enterprise.
 - Easy and simple to use.
 
@@ -70,7 +70,7 @@ docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/t
 
 ### Github actions
 
-You can use [tfe-drift github action][tfe-driftgh-actions]
+You can use [tfe-drift github action][tfe-drift-gh-actions]
 
 ```yaml
 name: drift-detection
@@ -91,6 +91,10 @@ jobs:
           limit-max-plans: 3 # Avoid queuing lots of speculative plans.
           not-before: 24h # A drift detection per day it's enough.
 ```
+
+Github action will write a job summary with the executed drift detections results:
+
+![Drift detection results job summary](docs/img/job-summary.png)
 
 ## F.A.Q
 
@@ -128,7 +132,7 @@ Using a combination of different strategies:
 
 ### Can be used with CI and crons (e.g: github action)?
 
-You should! :) You even have a ready to use [github action][tfe-driftgh-actions].
+You should! :) You even have a ready to use [github action][tfe-drift-gh-actions].
 
 It has been designed with that in mind:
 
@@ -201,4 +205,4 @@ Look at this example:
 ```
 
 [drift-detection]: https://www.hashicorp.com/campaign/drift-detection-for-terraform-cloud
-[tfe-driftgh-actions]: https://github.com/marketplace/actions/terraform-cloud-enterprise-drift-detection
+[tfe-drift-gh-actions]: https://github.com/marketplace/actions/terraform-cloud-enterprise-drift-detection
