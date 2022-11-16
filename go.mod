@@ -3,7 +3,7 @@ module github.com/slok/tfe-drift
 go 1.19
 
 require (
-	github.com/hashicorp/go-tfe v1.12.0
+	github.com/hashicorp/go-tfe v1.13.0
 	github.com/oklog/run v1.1.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
