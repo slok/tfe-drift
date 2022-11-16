@@ -55,13 +55,14 @@ func NewDriftDetectionPlansResultProcessor(logger log.Logger, noErrorDriftPlans 
 
 func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 	type jsonResultWorkspace struct {
-		Name                    string `json:"name"`
-		ID                      string `json:"id"`
-		DriftDetectionRunID     string `json:"drift_detection_run_id"`
-		DriftDetectionRunURL    string `json:"drift_detection_run_url"`
-		Drift                   bool   `json:"drift"`
-		DriftDetectionPlanError bool   `json:"drift_detection_plan_error"`
-		OK                      bool   `json:"ok"`
+		Name                    string   `json:"name"`
+		ID                      string   `json:"id"`
+		Tags                    []string `json:"tags"`
+		DriftDetectionRunID     string   `json:"drift_detection_run_id"`
+		DriftDetectionRunURL    string   `json:"drift_detection_run_url"`
+		Drift                   bool     `json:"drift"`
+		DriftDetectionPlanError bool     `json:"drift_detection_plan_error"`
+		OK                      bool     `json:"ok"`
 	}
 
 	type jsonResult struct {
@@ -88,6 +89,7 @@ func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 			jrwk := jsonResultWorkspace{
 				Name:                    wk.Name,
 				ID:                      wk.ID,
+				Tags:                    wk.Tags,
 				DriftDetectionRunID:     driftPlan.ID,
 				DriftDetectionRunURL:    driftPlan.URL,
 				Drift:                   hasDrift,

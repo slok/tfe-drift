@@ -168,6 +168,9 @@ Look at this example:
                 "wk1": {
                         "name": "wk1",
                         "id": "ws-RAB2YhfV7mpXUTW1",
+                        "tags": [
+                                "t1"
+                        ],
                         "drift_detection_run_id": "run-BQHxAamo7pSi1iMf",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk1/runs/run-BQHxAamo7pSi1iMf",
                         "drift": false,
@@ -177,6 +180,10 @@ Look at this example:
                 "wk2": {
                         "name": "wk2",
                         "id": "ws-vz46xzDKYWpfa5o8",
+                        "tags": [
+                                "t1",
+                                "t4"
+                        ],
                         "drift_detection_run_id": "run-8AgmNBY2MfKeyjGt",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk2/runs/run-8AgmNBY2MfKeyjGt",
                         "drift": false,
@@ -186,6 +193,10 @@ Look at this example:
                 "wk3": {
                         "name": "wk3",
                         "id": "ws-qaCmR6EL8fujrxxY",
+                        "tags": [
+                                "t2",
+                                "t3"
+                        ],
                         "drift_detection_run_id": "run-ndhST1LXMh7tn3L5",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk3/runs/run-ndhST1LXMh7tn3L5",
                         "drift": true,
@@ -195,6 +206,10 @@ Look at this example:
                 "wk4": {
                         "name": "wk4",
                         "id": "ws-df3PN4CX3grHghE9",
+                        "tags": [
+                                "t1",
+                                "t3"
+                        ],
                         "drift_detection_run_id": "run-Nwy7911XPX4qcwWu",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk4/runs/run-Nwy7911XPX4qcwWu",
                         "drift": false,

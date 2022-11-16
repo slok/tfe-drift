@@ -9,6 +9,7 @@ import (
 type Workspace struct {
 	Name          string
 	ID            string
+	Tags          []string
 	LastDriftPlan *Plan
 
 	// OriginalObject is the object from the original APIs (e.g go-tfe).

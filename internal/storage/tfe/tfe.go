@@ -164,6 +164,7 @@ func mapWorkspaceTFE2Model(w *tfe.Workspace) (*model.Workspace, error) {
 		Name:           w.Name,
 		ID:             w.ID,
 		OriginalObject: w,
+		Tags:           w.TagNames,
 	}, nil
 }
 
