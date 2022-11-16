@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- JSON result will have `ok` boolean as a helper, it will be `true` if there is any drift or drift detection failed, `false` otherwise.
+
 ## [v0.2.0] - 2022-11-15
 
 ### Added
