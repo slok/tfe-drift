@@ -97,15 +97,18 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 
 		"Having workspaces should return the result.": {
 			workspaces: []model.Workspace{
-				{ID: "wk1", Name: "wk1", LastDriftPlan: &model.Plan{ID: "p1", HasChanges: false}},
-				{ID: "wk2", Name: "wk2", LastDriftPlan: &model.Plan{ID: "p2", HasChanges: true}},
-				{ID: "wk3", Name: "wk3", LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedNotOK}},
+				{ID: "wk1", Name: "wk1", Tags: []string{"t1"}, LastDriftPlan: &model.Plan{ID: "p1", HasChanges: false}},
+				{ID: "wk2", Name: "wk2", Tags: []string{"t2"}, LastDriftPlan: &model.Plan{ID: "p2", HasChanges: true}},
+				{ID: "wk3", Name: "wk3", Tags: []string{"t3"}, LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedNotOK}},
 			},
 			expResultRegex: regexp.MustCompile(`{
 	"workspaces": {
 		"wk1": {
 			"name": "wk1",
 			"id": "wk1",
+			"tags": \[
+				"t1"
+			\],
 			"drift_detection_run_id": "p1",
 			"drift_detection_run_url": "",
 			"drift": false,
@@ -115,6 +118,9 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 		"wk2": {
 			"name": "wk2",
 			"id": "wk2",
+			"tags": \[
+				"t2"
+			\],
 			"drift_detection_run_id": "p2",
 			"drift_detection_run_url": "",
 			"drift": true,
@@ -124,6 +130,9 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 		"wk3": {
 			"name": "wk3",
 			"id": "wk3",
+			"tags": \[
+				"t3"
+			\],
 			"drift_detection_run_id": "p3",
 			"drift_detection_run_url": "",
 			"drift": false,
