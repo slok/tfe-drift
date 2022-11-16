@@ -90,6 +90,7 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 	"workspaces": {},
 	"drift": false,
 	"drift_detection_plan_error": false,
+	"ok": true,
 	"created_at": ".*"
 }`),
 		},
@@ -108,7 +109,8 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"drift_detection_run_id": "p1",
 			"drift_detection_run_url": "",
 			"drift": false,
-			"drift_detection_plan_error": false
+			"drift_detection_plan_error": false,
+			"ok": true
 		},
 		"wk2": {
 			"name": "wk2",
@@ -116,7 +118,8 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"drift_detection_run_id": "p2",
 			"drift_detection_run_url": "",
 			"drift": true,
-			"drift_detection_plan_error": false
+			"drift_detection_plan_error": false,
+			"ok": false
 		},
 		"wk3": {
 			"name": "wk3",
@@ -124,11 +127,13 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"drift_detection_run_id": "p3",
 			"drift_detection_run_url": "",
 			"drift": false,
-			"drift_detection_plan_error": true
+			"drift_detection_plan_error": true,
+			"ok": false
 		}
 	},
 	"drift": true,
 	"drift_detection_plan_error": true,
+	"ok": false,
 	"created_at": ".*"
 }`),
 		},

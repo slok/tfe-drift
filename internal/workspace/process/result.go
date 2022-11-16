@@ -61,12 +61,14 @@ func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 		DriftDetectionRunURL    string `json:"drift_detection_run_url"`
 		Drift                   bool   `json:"drift"`
 		DriftDetectionPlanError bool   `json:"drift_detection_plan_error"`
+		OK                      bool   `json:"ok"`
 	}
 
 	type jsonResult struct {
 		Workspaces              map[string]jsonResultWorkspace `json:"workspaces"`
 		Drift                   bool                           `json:"drift"`
 		DriftDetectionPlanError bool                           `json:"drift_detection_plan_error"`
+		OK                      bool                           `json:"ok"`
 		CreatedAt               time.Time                      `json:"created_at"`
 	}
 
@@ -80,21 +82,25 @@ func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 				driftPlan = *wk.LastDriftPlan
 			}
 
+			hasDrift := driftPlan.HasChanges
+			hasDriftDetectionError := driftPlan.Status == model.PlanStatusFinishedNotOK
+
 			jrwk := jsonResultWorkspace{
 				Name:                    wk.Name,
 				ID:                      wk.ID,
 				DriftDetectionRunID:     driftPlan.ID,
 				DriftDetectionRunURL:    driftPlan.URL,
-				Drift:                   driftPlan.HasChanges,
-				DriftDetectionPlanError: driftPlan.Status == model.PlanStatusFinishedNotOK,
+				Drift:                   hasDrift,
+				DriftDetectionPlanError: hasDriftDetectionError,
+				OK:                      !hasDrift && !hasDriftDetectionError,
 			}
 
-			if driftPlan.HasChanges {
+			if hasDrift {
 				drift = true
 				jrwk.Drift = true
 			}
 
-			if driftPlan.Status == model.PlanStatusFinishedNotOK {
+			if hasDriftDetectionError {
 				driftError = true
 				jrwk.DriftDetectionPlanError = true
 			}
@@ -106,6 +112,7 @@ func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 			Workspaces:              workspaces,
 			Drift:                   drift,
 			DriftDetectionPlanError: driftError,
+			OK:                      !drift && !driftError,
 			CreatedAt:               time.Now().UTC(),
 		}
 

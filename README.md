@@ -171,7 +171,8 @@ Look at this example:
                         "drift_detection_run_id": "run-BQHxAamo7pSi1iMf",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk1/runs/run-BQHxAamo7pSi1iMf",
                         "drift": false,
-                        "drift_detection_plan_error": false
+                        "drift_detection_plan_error": false,
+                        "ok": true
                 },
                 "wk2": {
                         "name": "wk2",
@@ -179,7 +180,8 @@ Look at this example:
                         "drift_detection_run_id": "run-8AgmNBY2MfKeyjGt",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk2/runs/run-8AgmNBY2MfKeyjGt",
                         "drift": false,
-                        "drift_detection_plan_error": false
+                        "drift_detection_plan_error": false,
+                        "ok": true
                 },
                 "wk3": {
                         "name": "wk3",
@@ -187,7 +189,8 @@ Look at this example:
                         "drift_detection_run_id": "run-ndhST1LXMh7tn3L5",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk3/runs/run-ndhST1LXMh7tn3L5",
                         "drift": true,
-                        "drift_detection_plan_error": false
+                        "drift_detection_plan_error": false,
+                        "ok": false
                 },
                 "wk4": {
                         "name": "wk4",
@@ -195,11 +198,13 @@ Look at this example:
                         "drift_detection_run_id": "run-Nwy7911XPX4qcwWu",
                         "drift_detection_run_url": "https://app.terraform.io/app/user1/workspaces/wk4/runs/run-Nwy7911XPX4qcwWu",
                         "drift": false,
-                        "drift_detection_plan_error": false
+                        "drift_detection_plan_error": false,
+                        "ok": true
                 }
         },
         "drift": true,
         "drift_detection_plan_error": false,
+        "ok": false,
         "created_at": "2022-11-14T17:59:55.946884748Z"
 }
 ```
