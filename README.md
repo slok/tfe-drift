@@ -38,6 +38,34 @@ tfe-drift run --limit-max-plan 5
 
 ## Usage
 
+### Github actions
+
+You can use [tfe-drift github action][tfe-drift-gh-actions]
+
+```yaml
+name: drift-detection
+
+on:
+  schedule:
+    - cron:  '0 * * * *' # Every hour.
+
+jobs:
+  drift-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: slok/tfe-drift-action@v0.3.0
+        id: tfe-drift
+        with:
+          tfe-token: ${{ secrets.TFE_TOKEN }}
+          tfe-org: slok
+          limit-max-plans: 3 # Avoid queuing lots of speculative plans.
+          not-before: 24h # A drift detection per day it's enough.
+```
+
+Github action will write a job summary with the executed drift detections results:
+
+![Drift detection results job summary](docs/img/job-summary.png)
+
 ### Binary
 
 Get the binary from the [releases](https://github.com/slok/tfe-drift/releases) first.
@@ -65,36 +93,8 @@ tfe-drift run --exclude dns --not-before 2h --limit-max-plan 2
 You can use the released [docker images](https://github.com/slok/tfe-drift/pkgs/container/tfe-drift).
 
 ```bash
-docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/tfe-drift:v0.1.0 run --help
+docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/tfe-drift:latest run --help
 ```
-
-### Github actions
-
-You can use [tfe-drift github action][tfe-drift-gh-actions]
-
-```yaml
-name: drift-detection
-
-on:
-  schedule:
-    - cron:  '0 * * * *' # Every hour.
-
-jobs:
-  drift-detection:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: slok/tfe-drift-action@v0.1.0
-        id: tfe-drift
-        with:
-          tfe-token: ${{ secrets.TFE_TOKEN }}
-          tfe-org: slok
-          limit-max-plans: 3 # Avoid queuing lots of speculative plans.
-          not-before: 24h # A drift detection per day it's enough.
-```
-
-Github action will write a job summary with the executed drift detections results:
-
-![Drift detection results job summary](docs/img/job-summary.png)
 
 ## F.A.Q
 
