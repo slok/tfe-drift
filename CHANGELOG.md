@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- JSON result will have the plan run duration on `run_duration` field.
+
 ## [v0.3.0] - 2022-11-18
 
 ### Added

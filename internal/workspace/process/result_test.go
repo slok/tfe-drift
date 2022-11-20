@@ -5,6 +5,7 @@ import (
 	"context"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -97,9 +98,9 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 
 		"Having workspaces should return the result.": {
 			workspaces: []model.Workspace{
-				{ID: "wk1", Name: "wk1", Tags: []string{"t1"}, LastDriftPlan: &model.Plan{ID: "p1", HasChanges: false}},
-				{ID: "wk2", Name: "wk2", Tags: []string{"t2"}, LastDriftPlan: &model.Plan{ID: "p2", HasChanges: true}},
-				{ID: "wk3", Name: "wk3", Tags: []string{"t3"}, LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedNotOK}},
+				{ID: "wk1", Name: "wk1", Tags: []string{"t1"}, LastDriftPlan: &model.Plan{ID: "p1", HasChanges: false, PlanRunDuration: 1 * time.Second}},
+				{ID: "wk2", Name: "wk2", Tags: []string{"t2"}, LastDriftPlan: &model.Plan{ID: "p2", HasChanges: true, PlanRunDuration: 17 * time.Second}},
+				{ID: "wk3", Name: "wk3", Tags: []string{"t3"}, LastDriftPlan: &model.Plan{ID: "p3", Status: model.PlanStatusFinishedNotOK, PlanRunDuration: 5 * time.Second}},
 			},
 			expResultRegex: regexp.MustCompile(`{
 	"workspaces": {
@@ -113,7 +114,8 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"drift_detection_run_url": "",
 			"drift": false,
 			"drift_detection_plan_error": false,
-			"ok": true
+			"ok": true,
+			"run_duration": "1s"
 		},
 		"wk2": {
 			"name": "wk2",
@@ -125,7 +127,8 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"drift_detection_run_url": "",
 			"drift": true,
 			"drift_detection_plan_error": false,
-			"ok": false
+			"ok": false,
+			"run_duration": "17s"
 		},
 		"wk3": {
 			"name": "wk3",
@@ -137,7 +140,8 @@ func TestDetailedJSONResultProcessor(t *testing.T) {
 			"drift_detection_run_url": "",
 			"drift": false,
 			"drift_detection_plan_error": true,
-			"ok": false
+			"ok": false,
+			"run_duration": "5s"
 		}
 	},
 	"drift": true,
