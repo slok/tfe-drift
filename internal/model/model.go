@@ -18,12 +18,14 @@ type Workspace struct {
 
 // Plan is a run plan used for drift checks.
 type Plan struct {
-	ID         string
-	CreatedAt  time.Time
-	Message    string
-	HasChanges bool
-	Status     PlanStatus
-	URL        string
+	ID              string
+	CreatedAt       time.Time
+	FinishedAt      time.Time
+	PlanRunDuration time.Duration
+	Message         string
+	HasChanges      bool
+	Status          PlanStatus
+	URL             string
 
 	// OriginalObject is the object from the original APIs (e.g go-tfe).
 	OriginalObject *tfe.Run

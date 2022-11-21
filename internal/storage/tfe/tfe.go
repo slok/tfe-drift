@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-tfe"
 
@@ -169,13 +170,24 @@ func mapWorkspaceTFE2Model(w *tfe.Workspace) (*model.Workspace, error) {
 }
 
 func mapPlanTFE2Model(run *tfe.Run) (*model.Plan, error) {
+	status := mapTFEStatus2Model(run.Status)
+
+	var duration time.Duration
+	var finishedAt time.Time
+	if status != model.PlanStatusWaiting && run.StatusTimestamps != nil {
+		finishedAt = run.StatusTimestamps.PlannedAndFinishedAt
+		duration = run.StatusTimestamps.PlannedAndFinishedAt.Sub(run.StatusTimestamps.PlanningAt)
+	}
+
 	return &model.Plan{
-		ID:             run.ID,
-		Message:        run.Message,
-		CreatedAt:      run.CreatedAt,
-		HasChanges:     run.HasChanges,
-		Status:         mapTFEStatus2Model(run.Status),
-		OriginalObject: run,
+		ID:              run.ID,
+		Message:         run.Message,
+		CreatedAt:       run.CreatedAt,
+		FinishedAt:      finishedAt,
+		PlanRunDuration: duration,
+		HasChanges:      run.HasChanges,
+		Status:          status,
+		OriginalObject:  run,
 	}, nil
 }
 

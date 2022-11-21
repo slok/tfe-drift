@@ -63,6 +63,7 @@ func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 		Drift                   bool     `json:"drift"`
 		DriftDetectionPlanError bool     `json:"drift_detection_plan_error"`
 		OK                      bool     `json:"ok"`
+		RunDuration             string   `json:"run_duration"`
 	}
 
 	type jsonResult struct {
@@ -95,6 +96,7 @@ func NewDetailedJSONResultProcessor(out io.Writer, pretty bool) Processor {
 				Drift:                   hasDrift,
 				DriftDetectionPlanError: hasDriftDetectionError,
 				OK:                      !hasDrift && !hasDriftDetectionError,
+				RunDuration:             driftPlan.PlanRunDuration.String(),
 			}
 
 			if hasDrift {
