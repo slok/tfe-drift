@@ -21,7 +21,9 @@ Automated Terraform Cloud/Enterprise drift detection.
 - Filter drift detections by workspace.
 - Ignore if drift detection plan not required (already running, executed recently...)
 - Result of the detection plans summary as output to automate with other apps.
+- Two running modes: controller mode (intervals), single run (for CI and crons).
 - Easy to automate with CI (It comes with a ready to use [Github action][tfe-drift-gh-actions]).
+- Prometheus metrics exporter for drift detections (in controller mode).
 - Compatible with Terraform Cloud and Terraform Enterprise.
 - Easy and simple to use.
 
@@ -32,13 +34,39 @@ Automated Terraform Cloud/Enterprise drift detection.
 - Terraform cloud/enterprise API token: Use `--tfe-token` or `TFE_DRIFT_TFE_TOKEN` env var.
 - Terraform cloud/enterprise organization: Use `--tfe-organization` or `TFE_DRIFT_TFE_ORGANIZATION` env var.
 
+### Single run mode
+
 ```bash
-tfe-drift run --limit-max-plan 5
+tfe-drift run --limit-max-plans 5
+```
+
+### Controller mode
+
+```bash
+tfe-drift controller --limit-max-plans 5
+```
+
+## Install
+
+### Binary
+
+Get the binary from the [releases](https://github.com/slok/tfe-drift/releases).
+
+### Docker
+
+You can use the released [docker images](https://github.com/slok/tfe-drift/pkgs/container/tfe-drift).
+
+```bash
+docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/tfe-drift:latest run --help
 ```
 
 ## Usage
 
-### Github actions
+### Controller
+
+If you want to let tfe-drift run as a long-running process triggering drift-detections at regular intervals you will need to use `controller` mode.
+
+### Single run with github actions
 
 You can use [tfe-drift github action][tfe-drift-gh-actions]
 
@@ -66,35 +94,41 @@ Github action will write a job summary with the executed drift detections result
 
 ![Drift detection results job summary](docs/img/job-summary.png)
 
-### Binary
+### Use cases
 
-Get the binary from the [releases](https://github.com/slok/tfe-drift/releases) first.
-
-Execute in dry run mode to see what would be the workspaces affected:
+Execute single run in dry run mode to see what would be the workspaces affected:
 
 ```bash
 tfe-drift run --dry-run
 ```
 
-Execute with safe defaults and get the result output in JSON:
+Execute single run with safe defaults and get the result output in JSON:
 
 ```bash
 tfe-drift run -o json
 ```
 
-Limit to a max of 2 executed plans, ignore workspace drift detections that have been already executed in the last 2h, and exclude dns workspace:
+Execute single run limiting to a max of 2 executed plans, ignore workspace drift detections that have been already executed in the last 2h, and exclude dns workspace:
 
 ```bash
 tfe-drift run --exclude dns --not-before 2h --limit-max-plan 2
 ```
 
-### Docker
-
-You can use the released [docker images](https://github.com/slok/tfe-drift/pkgs/container/tfe-drift).
+Execute the controller with an interval of 5m with a limit of 1:
 
 ```bash
-docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/tfe-drift:latest run --help
+tfe-drift controller --detect-interval 5m --limit-max-plan 1
 ```
+
+Execute the controller as only prometheus metrics exporter:
+
+```bash
+tfe-drift controller --disable-drift-detector
+```
+
+## Metrics
+
+TODO(slok): Show available metrics and how to alert using metrics.
 
 ## F.A.Q
 
@@ -129,6 +163,34 @@ Using a combination of different strategies:
 - Don't run already running/queued drift detection runs.
 - Don't run the workspaces where the drift detections has been executed in the last T time (e.g: 12h).
 - Prioritizing the workspaces with oldest drift detections or without previous ones.
+
+### Single run VS controller modes
+
+#### Single run
+
+Single run is perfect for CI and crons, if you don't have a runtime to run it or you have a simple use case (e.g: few workspaces), this is the mode for you, however, take into account that you will depend on a second system that will schedule the drift-detection runs. Also if you pay for CI minutes, this may be more expensive.
+
+- Pros:
+  - Doesn't require a runtime, CI can be used.
+- Cons:
+  - Pricing (may be expensive).
+  - Lack of small time scheduling (Depends on the CI/cron system).
+
+#### Controller
+
+If you have a cluster or a place that you can deploy long-running apps without hassle, the controller mode could be better, as you can schedule faster and smaller drift-detections (every 5m, limit of 1).
+
+- Pros:
+  - Smaller drift-detection intervals.
+  - Out of the box Prometheus metrics.
+- Cons:
+  - Requires a runtime.
+
+#### Mix
+
+Regarding the metrics, although the controller mode is the one that runs a prometheus exporter to get information for the drift detections, this can be run without the drift-detector by using `--disable-drift-detector`. So someone could run the drift-detections with the CI using single runs, and then setup the controller mode to run as a only metrics-exporter.
+
+This use case is not very common, although may be useful in some cases.
 
 ### Can be used with CI and crons (e.g: github action)?
 
