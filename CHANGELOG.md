@@ -5,6 +5,9 @@
 ### Added
 
 - JSON result will have the plan run duration on `run_duration` field.
+- `controller` mode, this will run the drift detector as a controller running the drift detections.
+- Prometheus drift-detection metrics exporter on the `controller` mode to be able to export drift-detection metrics.
+- Able to disabled controller in `controller` mode to only run the metrics exporter if required.
 
 ## [v0.3.0] - 2022-11-18
 
