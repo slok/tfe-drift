@@ -64,7 +64,11 @@ docker run --rm -it -e TFE_DRIFT_TFE_TOKEN=${TFE_DRIFT_TFE_TOKEN} ghcr.io/slok/t
 
 ### Controller
 
-If you want to let tfe-drift run as a long-running process triggering drift-detections at regular intervals you will need to use `controller` mode.
+If you want to let tfe-drift run as a long-running process triggering drift-detections at regular intervals, use `controller` mode.
+
+```bash
+tfe-drift controller --detect-interval 5m --limit-max-plan 1
+```
 
 ### Single run with github actions
 
@@ -114,10 +118,10 @@ Execute single run limiting to a max of 2 executed plans, ignore workspace drift
 tfe-drift run --exclude dns --not-before 2h --limit-max-plan 2
 ```
 
-Execute the controller with an interval of 5m with a limit of 1:
+Execute the controller with an interval of 5m with a limit of 1 on the workspaces labelled with `enable-drift-detection`:
 
 ```bash
-tfe-drift controller --detect-interval 5m --limit-max-plan 1
+tfe-drift controller --detect-interval 5m --limit-max-plan 1 --include-tag enable-drift-detection
 ```
 
 Execute the controller as only prometheus metrics exporter:

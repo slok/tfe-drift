@@ -3,6 +3,8 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -57,7 +59,7 @@ func NewCollector(logger log.Logger, repo Repository, wkProcessor process.Proces
 		infoDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "info"),
 			"Information of the workspace.",
-			[]string{"workspaces_name", "workspaces_id", "run_id", "run_url"}, nil,
+			[]string{"workspaces_name", "workspaces_id", "run_id", "run_url", "tags"}, nil,
 		),
 		createdDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "drift_detection_create"),
@@ -140,6 +142,10 @@ func (c collector) collect(ctx context.Context) ([]prometheus.Metric, error) {
 			continue
 		}
 
+		tags := wk.Tags
+		sort.Strings(tags)
+		tagsLabel := strings.Join(tags, ",")
+
 		metrics = append(metrics,
 			// Write all state metrics setting 1 to the states we are in, 0 on the others.
 			prometheus.MustNewConstMetric(c.stateDesc, prometheus.GaugeValue, float64(okValue), wk.Name, stateOk),
@@ -147,7 +153,7 @@ func (c collector) collect(ctx context.Context) ([]prometheus.Metric, error) {
 			prometheus.MustNewConstMetric(c.stateDesc, prometheus.GaugeValue, float64(driftPlanErrorValue), wk.Name, stateDriftPlanError),
 
 			// Info metric.
-			prometheus.MustNewConstMetric(c.infoDesc, prometheus.GaugeValue, 1, wk.Name, wk.ID, wk.LastDriftPlan.ID, wk.LastDriftPlan.URL),
+			prometheus.MustNewConstMetric(c.infoDesc, prometheus.GaugeValue, 1, wk.Name, wk.ID, wk.LastDriftPlan.ID, wk.LastDriftPlan.URL, tagsLabel),
 
 			// Timestamps.
 			prometheus.MustNewConstMetric(c.createdDesc, prometheus.GaugeValue, float64(wk.LastDriftPlan.CreatedAt.Unix()), wk.Name),

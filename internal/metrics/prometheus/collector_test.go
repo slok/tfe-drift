@@ -37,7 +37,7 @@ func TestCollector(t *testing.T) {
 		"Having workspaces should return metrics.": {
 			mock: func(mr *prometheusmock.Repository) {
 				wks := []model.Workspace{
-					{Name: "test1", ID: "test-id-1", LastDriftPlan: &model.Plan{
+					{Name: "test1", ID: "test-id-1", Tags: []string{"t1a", "t1b"}, LastDriftPlan: &model.Plan{
 						ID:         "test-run1",
 						URL:        "https://test-run1.dev",
 						Status:     model.PlanStatusFinishedOK,
@@ -45,7 +45,7 @@ func TestCollector(t *testing.T) {
 						CreatedAt:  t0,
 						FinishedAt: t0.Add(10 * time.Second),
 					}},
-					{Name: "test2", ID: "test-id-2", LastDriftPlan: &model.Plan{
+					{Name: "test2", ID: "test-id-2", Tags: []string{"t2d", "t2c"}, LastDriftPlan: &model.Plan{
 						ID:         "test-run2",
 						URL:        "https://test-run2.dev",
 						Status:     model.PlanStatusFinishedNotOK,
@@ -53,7 +53,7 @@ func TestCollector(t *testing.T) {
 						CreatedAt:  t0.Add(55 * time.Second),
 						FinishedAt: t0.Add(72 * time.Second),
 					}},
-					{Name: "test3", ID: "test-id-3", LastDriftPlan: &model.Plan{
+					{Name: "test3", ID: "test-id-3", Tags: []string{"t3c", "t3b", "t3a"}, LastDriftPlan: &model.Plan{
 						ID:         "test-run3",
 						URL:        "https://test-run3.dev",
 						Status:     model.PlanStatusFinishedOK,
@@ -91,9 +91,9 @@ tfe_drift_workspace_drift_detection_state{state="ok",workspaces_name="test3"} 1
 
 # HELP tfe_drift_workspace_info Information of the workspace.
 # TYPE tfe_drift_workspace_info gauge
-tfe_drift_workspace_info{run_id="test-run1",run_url="https://test-run1.dev",workspaces_id="test-id-1",workspaces_name="test1"} 1
-tfe_drift_workspace_info{run_id="test-run2",run_url="https://test-run2.dev",workspaces_id="test-id-2",workspaces_name="test2"} 1
-tfe_drift_workspace_info{run_id="test-run3",run_url="https://test-run3.dev",workspaces_id="test-id-3",workspaces_name="test3"} 1
+tfe_drift_workspace_info{run_id="test-run1",run_url="https://test-run1.dev",tags="t1a,t1b",workspaces_id="test-id-1",workspaces_name="test1"} 1
+tfe_drift_workspace_info{run_id="test-run2",run_url="https://test-run2.dev",tags="t2c,t2d",workspaces_id="test-id-2",workspaces_name="test2"} 1
+tfe_drift_workspace_info{run_id="test-run3",run_url="https://test-run3.dev",tags="t3a,t3b,t3c",workspaces_id="test-id-3",workspaces_name="test3"} 1
 `,
 			expMetricNames: []string{
 				"tfe_drift_workspace_drift_detection_state",
