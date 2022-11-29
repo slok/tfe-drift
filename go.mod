@@ -3,7 +3,7 @@ module github.com/slok/tfe-drift
 go 1.19
 
 require (
-	github.com/hashicorp/go-tfe v1.13.0
+	github.com/hashicorp/go-tfe v1.14.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
@@ -21,7 +21,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
-	github.com/hashicorp/go-slug v0.10.0 // indirect
+	github.com/hashicorp/go-slug v0.10.1 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/jsonapi v0.0.0-20210826224640-ee7dae0fb22d // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
