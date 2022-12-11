@@ -37,7 +37,7 @@ func TestCollector(t *testing.T) {
 		"Having workspaces should return metrics.": {
 			mock: func(mr *prometheusmock.Repository) {
 				wks := []model.Workspace{
-					{Name: "test1", ID: "test-id-1", Tags: []string{"t1a", "t1b"}, LastDriftPlan: &model.Plan{
+					{Name: "test1", ID: "test-id-1", Tags: []string{"t1a", "t1b"}, Org: "test-org", LastDriftPlan: &model.Plan{
 						ID:         "test-run1",
 						URL:        "https://test-run1.dev",
 						Status:     model.PlanStatusFinishedOK,
@@ -45,7 +45,7 @@ func TestCollector(t *testing.T) {
 						CreatedAt:  t0,
 						FinishedAt: t0.Add(10 * time.Second),
 					}},
-					{Name: "test2", ID: "test-id-2", Tags: []string{"t2d", "t2c"}, LastDriftPlan: &model.Plan{
+					{Name: "test2", ID: "test-id-2", Tags: []string{"t2d", "t2c"}, Org: "test-org", LastDriftPlan: &model.Plan{
 						ID:         "test-run2",
 						URL:        "https://test-run2.dev",
 						Status:     model.PlanStatusFinishedNotOK,
@@ -53,7 +53,7 @@ func TestCollector(t *testing.T) {
 						CreatedAt:  t0.Add(55 * time.Second),
 						FinishedAt: t0.Add(72 * time.Second),
 					}},
-					{Name: "test3", ID: "test-id-3", Tags: []string{"t3c", "t3b", "t3a"}, LastDriftPlan: &model.Plan{
+					{Name: "test3", ID: "test-id-3", Tags: []string{"t3c", "t3b", "t3a"}, Org: "test-org", LastDriftPlan: &model.Plan{
 						ID:         "test-run3",
 						URL:        "https://test-run3.dev",
 						Status:     model.PlanStatusFinishedOK,
@@ -91,9 +91,9 @@ tfe_drift_workspace_drift_detection_state{state="ok",workspace_name="test3"} 1
 
 # HELP tfe_drift_workspace_info Information of the workspace.
 # TYPE tfe_drift_workspace_info gauge
-tfe_drift_workspace_info{run_id="test-run1",run_url="https://test-run1.dev",tags="t1a,t1b",workspace_id="test-id-1",workspace_name="test1"} 1
-tfe_drift_workspace_info{run_id="test-run2",run_url="https://test-run2.dev",tags="t2c,t2d",workspace_id="test-id-2",workspace_name="test2"} 1
-tfe_drift_workspace_info{run_id="test-run3",run_url="https://test-run3.dev",tags="t3a,t3b,t3c",workspace_id="test-id-3",workspace_name="test3"} 1
+tfe_drift_workspace_info{organization_name="test-org",run_id="test-run1",run_url="https://test-run1.dev",tags="t1a,t1b",workspace_id="test-id-1",workspace_name="test1"} 1
+tfe_drift_workspace_info{organization_name="test-org",run_id="test-run2",run_url="https://test-run2.dev",tags="t2c,t2d",workspace_id="test-id-2",workspace_name="test2"} 1
+tfe_drift_workspace_info{organization_name="test-org",run_id="test-run3",run_url="https://test-run3.dev",tags="t3a,t3b,t3c",workspace_id="test-id-3",workspace_name="test3"} 1
 `,
 			expMetricNames: []string{
 				"tfe_drift_workspace_drift_detection_state",

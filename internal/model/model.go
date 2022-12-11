@@ -9,6 +9,7 @@ import (
 type Workspace struct {
 	Name          string
 	ID            string
+	Org           string
 	Tags          []string
 	LastDriftPlan *Plan
 
