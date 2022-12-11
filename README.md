@@ -132,7 +132,26 @@ tfe-drift controller --disable-drift-detector
 
 ## Metrics
 
-TODO(slok): Show available metrics and how to alert using metrics.
+As an example lets use this alerting rule query that alerts on drifts happened in the last half hour:
+
+```promql
+max by (organization_name, workspace_name, run_url) (
+    (
+        tfe_drift_workspace_drift_detection_state{state="drift"} > 0
+      and on (workspace_name)
+        (time() - tfe_drift_workspace_drift_detection_create) < 1800
+    )
+  * on (workspace_name) group_right ()
+    tfe_drift_workspace_info
+)
+```
+
+Explanation:
+
+- `tfe_drift_workspace_drift_detection_state{state="drift"} > 0`: Give me the workspaces  that are in `drift` state (we could ask also for `drift_plan_error`).
+- `(time() - tfe_drift_workspace_drift_detection_create) < 1800`: Give me the workspaces that had a drift detection in the last `30m`.
+- `* on (workspace_name) group_right () tfe_drift_workspace_info`: Add all the labels to the workspaces that meet the previous queries (state and recently drift detection).
+- `max by (organization_name, workspace_name, run_url)`: We only want those 3 labels, so we drop them by using aggregation (we could use, `min`, `sum`... doesn't matter as we don't use the value).
 
 ## F.A.Q
 
