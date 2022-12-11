@@ -73,7 +73,7 @@ func (r repository) ListWorkspaces(ctx context.Context, includeTags, excludeTags
 	// Map to model.
 	wks := make([]model.Workspace, 0, len(allWks))
 	for _, wk := range allWks {
-		mwk, err := mapWorkspaceTFE2Model(wk)
+		mwk, err := r.mapWorkspaceTFE2Model(wk)
 		if err != nil {
 			return nil, fmt.Errorf("could not map tfe workspaces to model: %w", err)
 		}
@@ -160,10 +160,11 @@ func (r repository) runURL(workspaceName, runID string) string {
 	return fmt.Sprintf(runURLFmt, r.tfeAddress, r.org, workspaceName, runID)
 }
 
-func mapWorkspaceTFE2Model(w *tfe.Workspace) (*model.Workspace, error) {
+func (r repository) mapWorkspaceTFE2Model(w *tfe.Workspace) (*model.Workspace, error) {
 	return &model.Workspace{
 		Name:           w.Name,
 		ID:             w.ID,
+		Org:            r.org,
 		OriginalObject: w,
 		Tags:           w.TagNames,
 	}, nil

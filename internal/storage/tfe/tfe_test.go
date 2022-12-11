@@ -46,9 +46,9 @@ func TestRepositoryListWorkspaces(t *testing.T) {
 				}, nil)
 			},
 			expWorkspaces: []model.Workspace{
-				{ID: "test-id-1", Name: "test-1", Tags: []string{"t1"}, OriginalObject: &gotfe.Workspace{ID: "test-id-1", Name: "test-1", TagNames: []string{"t1"}}},
-				{ID: "test-id-2", Name: "test-2", Tags: []string{"t2"}, OriginalObject: &gotfe.Workspace{ID: "test-id-2", Name: "test-2", TagNames: []string{"t2"}}},
-				{ID: "test-id-3", Name: "test-3", Tags: []string{"t3"}, OriginalObject: &gotfe.Workspace{ID: "test-id-3", Name: "test-3", TagNames: []string{"t3"}}},
+				{ID: "test-id-1", Name: "test-1", Org: "test", Tags: []string{"t1"}, OriginalObject: &gotfe.Workspace{ID: "test-id-1", Name: "test-1", TagNames: []string{"t1"}}},
+				{ID: "test-id-2", Name: "test-2", Org: "test", Tags: []string{"t2"}, OriginalObject: &gotfe.Workspace{ID: "test-id-2", Name: "test-2", TagNames: []string{"t2"}}},
+				{ID: "test-id-3", Name: "test-3", Org: "test", Tags: []string{"t3"}, OriginalObject: &gotfe.Workspace{ID: "test-id-3", Name: "test-3", TagNames: []string{"t3"}}},
 			},
 		},
 
@@ -67,9 +67,9 @@ func TestRepositoryListWorkspaces(t *testing.T) {
 					Items:      []*gotfe.Workspace{{ID: "test-id-3", Name: "test-3"}}}, nil)
 			},
 			expWorkspaces: []model.Workspace{
-				{ID: "test-id-1", Name: "test-1", OriginalObject: &gotfe.Workspace{ID: "test-id-1", Name: "test-1"}},
-				{ID: "test-id-2", Name: "test-2", OriginalObject: &gotfe.Workspace{ID: "test-id-2", Name: "test-2"}},
-				{ID: "test-id-3", Name: "test-3", OriginalObject: &gotfe.Workspace{ID: "test-id-3", Name: "test-3"}},
+				{ID: "test-id-1", Name: "test-1", Org: "test", OriginalObject: &gotfe.Workspace{ID: "test-id-1", Name: "test-1"}},
+				{ID: "test-id-2", Name: "test-2", Org: "test", OriginalObject: &gotfe.Workspace{ID: "test-id-2", Name: "test-2"}},
+				{ID: "test-id-3", Name: "test-3", Org: "test", OriginalObject: &gotfe.Workspace{ID: "test-id-3", Name: "test-3"}},
 			},
 		},
 	}

@@ -59,7 +59,7 @@ func NewCollector(logger log.Logger, repo Repository, wkProcessor process.Proces
 		infoDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "info"),
 			"Information of the workspace.",
-			[]string{"workspace_name", "workspace_id", "run_id", "run_url", "tags"}, nil,
+			[]string{"workspace_name", "workspace_id", "run_id", "run_url", "tags", "organization_name"}, nil,
 		),
 		createdDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "drift_detection_create"),
@@ -153,7 +153,7 @@ func (c collector) collect(ctx context.Context) ([]prometheus.Metric, error) {
 			prometheus.MustNewConstMetric(c.stateDesc, prometheus.GaugeValue, float64(driftPlanErrorValue), wk.Name, stateDriftPlanError),
 
 			// Info metric.
-			prometheus.MustNewConstMetric(c.infoDesc, prometheus.GaugeValue, 1, wk.Name, wk.ID, wk.LastDriftPlan.ID, wk.LastDriftPlan.URL, tagsLabel),
+			prometheus.MustNewConstMetric(c.infoDesc, prometheus.GaugeValue, 1, wk.Name, wk.ID, wk.LastDriftPlan.ID, wk.LastDriftPlan.URL, tagsLabel, wk.Org),
 
 			// Timestamps.
 			prometheus.MustNewConstMetric(c.createdDesc, prometheus.GaugeValue, float64(wk.LastDriftPlan.CreatedAt.Unix()), wk.Name),
