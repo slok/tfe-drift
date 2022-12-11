@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [v0.5.0] - 2022-12-11
+
 BREAKING: Prometheus metrics labels `workspaces_name` and `workspaces_id` have been renamed.
 
 ### Added
@@ -57,7 +59,8 @@ BREAKING: Prometheus metrics labels `workspaces_name` and `workspaces_id` have b
 - Different exit codes depending on the result of the run.
 - Dry-run mode.
 
-[unreleased]: https://github.com/slok/tfe-drift/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/slok/tfe-drift/compare/v0.5.0...HEAD
+[v0.5.0]: https://github.com/slok/tfe-drift/compare/v0.4.0...v0.5.0
 [v0.4.0]: https://github.com/slok/tfe-drift/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/slok/tfe-drift/compare/v0.2.0...v0.3.0
 [v0.2.0]: https://github.com/slok/tfe-drift/compare/v0.1.0...v0.2.0
