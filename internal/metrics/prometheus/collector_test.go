@@ -67,33 +67,33 @@ func TestCollector(t *testing.T) {
 			expMetrics: `
 # HELP tfe_drift_workspace_drift_detection_create Unix epoch timestamp when the drift detection was created.
 # TYPE tfe_drift_workspace_drift_detection_create gauge
-tfe_drift_workspace_drift_detection_create{workspaces_name="test1"} 1.669052633e+09
-tfe_drift_workspace_drift_detection_create{workspaces_name="test2"} 1.669052688e+09
-tfe_drift_workspace_drift_detection_create{workspaces_name="test3"} 1.669052753e+09
+tfe_drift_workspace_drift_detection_create{workspace_name="test1"} 1.669052633e+09
+tfe_drift_workspace_drift_detection_create{workspace_name="test2"} 1.669052688e+09
+tfe_drift_workspace_drift_detection_create{workspace_name="test3"} 1.669052753e+09
 
 # HELP tfe_drift_workspace_drift_detection_finish Unix epoch timestamp when the drift detection ended.
 # TYPE tfe_drift_workspace_drift_detection_finish gauge
-tfe_drift_workspace_drift_detection_finish{workspaces_name="test1"} 1.669052643e+09
-tfe_drift_workspace_drift_detection_finish{workspaces_name="test2"} 1.669052705e+09
-tfe_drift_workspace_drift_detection_finish{workspaces_name="test3"} 1.669052778e+09
+tfe_drift_workspace_drift_detection_finish{workspace_name="test1"} 1.669052643e+09
+tfe_drift_workspace_drift_detection_finish{workspace_name="test2"} 1.669052705e+09
+tfe_drift_workspace_drift_detection_finish{workspace_name="test3"} 1.669052778e+09
 
 # HELP tfe_drift_workspace_drift_detection_state The state of a workspaces drift detection.
 # TYPE tfe_drift_workspace_drift_detection_state gauge
-tfe_drift_workspace_drift_detection_state{state="drift",workspaces_name="test1"} 1
-tfe_drift_workspace_drift_detection_state{state="drift",workspaces_name="test2"} 0
-tfe_drift_workspace_drift_detection_state{state="drift",workspaces_name="test3"} 0
-tfe_drift_workspace_drift_detection_state{state="drift_plan_error",workspaces_name="test1"} 0
-tfe_drift_workspace_drift_detection_state{state="drift_plan_error",workspaces_name="test2"} 1
-tfe_drift_workspace_drift_detection_state{state="drift_plan_error",workspaces_name="test3"} 0
-tfe_drift_workspace_drift_detection_state{state="ok",workspaces_name="test1"} 0
-tfe_drift_workspace_drift_detection_state{state="ok",workspaces_name="test2"} 0
-tfe_drift_workspace_drift_detection_state{state="ok",workspaces_name="test3"} 1
+tfe_drift_workspace_drift_detection_state{state="drift",workspace_name="test1"} 1
+tfe_drift_workspace_drift_detection_state{state="drift",workspace_name="test2"} 0
+tfe_drift_workspace_drift_detection_state{state="drift",workspace_name="test3"} 0
+tfe_drift_workspace_drift_detection_state{state="drift_plan_error",workspace_name="test1"} 0
+tfe_drift_workspace_drift_detection_state{state="drift_plan_error",workspace_name="test2"} 1
+tfe_drift_workspace_drift_detection_state{state="drift_plan_error",workspace_name="test3"} 0
+tfe_drift_workspace_drift_detection_state{state="ok",workspace_name="test1"} 0
+tfe_drift_workspace_drift_detection_state{state="ok",workspace_name="test2"} 0
+tfe_drift_workspace_drift_detection_state{state="ok",workspace_name="test3"} 1
 
 # HELP tfe_drift_workspace_info Information of the workspace.
 # TYPE tfe_drift_workspace_info gauge
-tfe_drift_workspace_info{run_id="test-run1",run_url="https://test-run1.dev",tags="t1a,t1b",workspaces_id="test-id-1",workspaces_name="test1"} 1
-tfe_drift_workspace_info{run_id="test-run2",run_url="https://test-run2.dev",tags="t2c,t2d",workspaces_id="test-id-2",workspaces_name="test2"} 1
-tfe_drift_workspace_info{run_id="test-run3",run_url="https://test-run3.dev",tags="t3a,t3b,t3c",workspaces_id="test-id-3",workspaces_name="test3"} 1
+tfe_drift_workspace_info{run_id="test-run1",run_url="https://test-run1.dev",tags="t1a,t1b",workspace_id="test-id-1",workspace_name="test1"} 1
+tfe_drift_workspace_info{run_id="test-run2",run_url="https://test-run2.dev",tags="t2c,t2d",workspace_id="test-id-2",workspace_name="test2"} 1
+tfe_drift_workspace_info{run_id="test-run3",run_url="https://test-run3.dev",tags="t3a,t3b,t3c",workspace_id="test-id-3",workspace_name="test3"} 1
 `,
 			expMetricNames: []string{
 				"tfe_drift_workspace_drift_detection_state",

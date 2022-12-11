@@ -54,22 +54,22 @@ func NewCollector(logger log.Logger, repo Repository, wkProcessor process.Proces
 		stateDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "drift_detection_state"),
 			"The state of a workspaces drift detection.",
-			[]string{"workspaces_name", "state"}, nil,
+			[]string{"workspace_name", "state"}, nil,
 		),
 		infoDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "info"),
 			"Information of the workspace.",
-			[]string{"workspaces_name", "workspaces_id", "run_id", "run_url", "tags"}, nil,
+			[]string{"workspace_name", "workspace_id", "run_id", "run_url", "tags"}, nil,
 		),
 		createdDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "drift_detection_create"),
 			"Unix epoch timestamp when the drift detection was created.",
-			[]string{"workspaces_name"}, nil,
+			[]string{"workspace_name"}, nil,
 		),
 		finishedDesc: prometheus.NewDesc(
 			prometheus.BuildFQName(info.PrometheusNamespace, "workspace", "drift_detection_finish"),
 			"Unix epoch timestamp when the drift detection ended.",
-			[]string{"workspaces_name"}, nil,
+			[]string{"workspace_name"}, nil,
 		),
 	}
 }

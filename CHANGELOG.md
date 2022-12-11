@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+BREAKING: Prometheus metrics labels `workspaces_name` and `workspaces_id` have been renamed.
+
+### Changed
+
+- The Prometheus metric label `workspaces_name` now is `workspace_name`.
+- The Prometheus metric label `workspaces_id` now is `workspace_id`.
+
 ## [v0.4.0] - 2022-11-27
 
 ### Added
