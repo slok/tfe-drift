@@ -15,13 +15,13 @@ type WorkspaceLatestCheckPlanGetter interface {
 
 //go:generate mockery --case underscore --output processmock --outpkg processmock --name WorkspaceLatestCheckPlanGetter
 
-func NewHydrateLatestDetectionPlanProcessor(ctx context.Context, logger log.Logger, g WorkspaceLatestCheckPlanGetter) Processor {
+func NewHydrateLatestDetectionPlanProcessor(ctx context.Context, logger log.Logger, g WorkspaceLatestCheckPlanGetter, workers int) Processor {
 	logger = logger.WithValues(log.Kv{"workspace-processor": "HydrateLatestDetectionPlan"})
 
 	// Run workers for concurrent fetch.
 	jobs := make(chan model.Workspace)
 	res := make(chan getLatestCheckPlanWorkerResult)
-	for i := 0; i < 20; i++ {
+	for i := 0; i < workers; i++ {
 		go getLatestCheckPlanWorker(ctx, g, jobs, res)
 	}
 

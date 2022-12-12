@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Allow specifying the number of workers that will be used concurrently to fetch the workspaces data. 
+
 ## [v0.5.0] - 2022-12-11
 
 BREAKING: Prometheus metrics labels `workspaces_name` and `workspaces_id` have been renamed.

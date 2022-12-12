@@ -36,6 +36,7 @@ type RunCommand struct {
 	disableDriftPlanExitCodes bool
 	outFormat                 string
 	dryRun                    bool
+	fetchWorkers              int
 }
 
 // NewRunCommand returns the Run command.
@@ -57,6 +58,7 @@ func NewRunCommand(rootConfig *RootCommand, app *kingpin.Application) *RunComman
 	cmd.Flag("disable-drift-plan-exitcodes", "Will disable the drift detection plans related exit codes (2 and 3).").BoolVar(&c.disableDriftPlanExitCodes)
 	cmd.Flag("out-format", "Selects the format of the result output.").Short('o').EnumVar(&c.outFormat, outFormatJSON, outFormatPrettyJSON)
 	cmd.Flag("dry-run", "Will execute all the process without creating any drift detection plans, will use latest ones available.").BoolVar(&c.dryRun)
+	cmd.Flag("fetch-workers", "The number of workers running concurrently to fetch workspaces information.").Default("20").IntVar(&c.fetchWorkers)
 
 	return c
 }
@@ -130,7 +132,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 	wksProcessors := []wksprocess.Processor{
 		includeProcessor,
 		excludeProcessor,
-		wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, logger, repo),
+		wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, logger, repo, c.fetchWorkers),
 		wksprocess.NewFilterQueuedDriftDetectorProcessor(logger),
 		wksprocess.NewFilterDriftDetectionsBeforeProcessor(logger, c.notBefore),
 		wksprocess.NewSortByOldestDetectionPlanProcessor(logger),

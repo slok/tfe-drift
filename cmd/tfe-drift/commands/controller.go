@@ -37,10 +37,11 @@ type ControllerCommand struct {
 	detectInterval       time.Duration
 	disableDriftDetector bool
 	metricsTimeout       time.Duration
-	ListenAddress        string
-	MetricsPath          string
-	HealthCheckPath      string
-	PprofPath            string
+	listenAddress        string
+	metricsPath          string
+	healthCheckPath      string
+	pprofPath            string
+	fetchWorkers         int
 }
 
 // NewControllerCommand returns the Controller command.
@@ -63,10 +64,11 @@ func NewControllerCommand(rootConfig *RootCommand, app *kingpin.Application) *Co
 	cmd.Flag("detect-interval", "The interval that the app will run a drift detection.").Default("5m").DurationVar(&c.detectInterval)
 	cmd.Flag("disable-drift-detector", "Will disable the drift detector, this can be useful when you want ot run only the metrics exporter.").BoolVar(&c.disableDriftDetector)
 	cmd.Flag("metrics-exporter-timeout", "Duration timeout used for the prometheus exporter metrics collector.").Default("45s").DurationVar(&c.metricsTimeout)
-	cmd.Flag("listen-address", "The address where the will be listening.").Default(":8080").StringVar(&c.ListenAddress)
-	cmd.Flag("metrics-path", "The path where Prometheus metrics will be served.").Default("/metrics").StringVar(&c.MetricsPath)
-	cmd.Flag("health-check-path", "The path where the health check will be served.").Default("/status").StringVar(&c.HealthCheckPath)
-	cmd.Flag("pprof-path", "The path where the pprof handlers will be served.").Default("/debug/pprof").StringVar(&c.PprofPath)
+	cmd.Flag("listen-address", "The address where the will be listening.").Default(":8080").StringVar(&c.listenAddress)
+	cmd.Flag("metrics-path", "The path where Prometheus metrics will be served.").Default("/metrics").StringVar(&c.metricsPath)
+	cmd.Flag("health-check-path", "The path where the health check will be served.").Default("/status").StringVar(&c.healthCheckPath)
+	cmd.Flag("pprof-path", "The path where the pprof handlers will be served.").Default("/debug/pprof").StringVar(&c.pprofPath)
+	cmd.Flag("fetch-workers", "The number of workers running concurrently to fetch workspaces information.").Default("20").IntVar(&c.fetchWorkers)
 
 	return c
 }
@@ -139,7 +141,7 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 		chain := wksprocess.NewProcessorChain([]wksprocess.Processor{
 			includeProcessor,
 			excludeProcessor,
-			wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, notVerboseLogger, repo),
+			wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, notVerboseLogger, repo, c.fetchWorkers),
 			wksprocess.NewFilterQueuedDriftDetectorProcessor(notVerboseLogger),
 			wksprocess.NewFilterDriftDetectionsBeforeProcessor(notVerboseLogger, c.notBefore),
 			wksprocess.NewSortByOldestDetectionPlanProcessor(notVerboseLogger),
@@ -183,7 +185,7 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 		chain := wksprocess.NewProcessorChain([]wksprocess.Processor{
 			includeProcessor,
 			excludeProcessor,
-			wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, notVerboseLogger, repo),
+			wksprocess.NewHydrateLatestDetectionPlanProcessor(ctx, notVerboseLogger, repo, c.fetchWorkers),
 		})
 
 		// Register metrics collector to create the exporter.
@@ -191,29 +193,29 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 		prometheus.DefaultRegisterer.MustRegister(promCollector)
 
 		logger := logger.WithValues(log.Kv{
-			"addr":         c.ListenAddress,
-			"metrics":      c.MetricsPath,
-			"health-check": c.HealthCheckPath,
-			"pprof":        c.PprofPath,
+			"addr":         c.listenAddress,
+			"metrics":      c.metricsPath,
+			"health-check": c.healthCheckPath,
+			"pprof":        c.pprofPath,
 		})
 		mux := http.NewServeMux()
 
 		// Metrics.
-		mux.Handle(c.MetricsPath, promhttp.Handler())
+		mux.Handle(c.metricsPath, promhttp.Handler())
 
 		// Pprof.
-		mux.HandleFunc(c.PprofPath+"/", pprof.Index)
-		mux.HandleFunc(c.PprofPath+"/cmdline", pprof.Cmdline)
-		mux.HandleFunc(c.PprofPath+"/profile", pprof.Profile)
-		mux.HandleFunc(c.PprofPath+"/symbol", pprof.Symbol)
-		mux.HandleFunc(c.PprofPath+"/trace", pprof.Trace)
+		mux.HandleFunc(c.pprofPath+"/", pprof.Index)
+		mux.HandleFunc(c.pprofPath+"/cmdline", pprof.Cmdline)
+		mux.HandleFunc(c.pprofPath+"/profile", pprof.Profile)
+		mux.HandleFunc(c.pprofPath+"/symbol", pprof.Symbol)
+		mux.HandleFunc(c.pprofPath+"/trace", pprof.Trace)
 
 		// Health check.
-		mux.Handle(c.HealthCheckPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"status":"ok"}`)) }))
+		mux.Handle(c.healthCheckPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"status":"ok"}`)) }))
 
 		// Create server.
 		server := &http.Server{
-			Addr:    c.ListenAddress,
+			Addr:    c.listenAddress,
 			Handler: mux,
 		}
 
