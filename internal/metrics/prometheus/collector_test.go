@@ -1,6 +1,7 @@
 package prometheus_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -21,12 +22,12 @@ func TestCollector(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "2022-11-21T17:43:53+00:00")
 
 	tests := map[string]struct {
-		mock           func(mr *prometheusmock.Repository)
+		mock           func(mr *prometheusmock.WorkspaceRepository)
 		expMetrics     string
 		expMetricNames []string
 	}{
 		"No workspaces shouldn't return any metric.": {
-			mock: func(mr *prometheusmock.Repository) {
+			mock: func(mr *prometheusmock.WorkspaceRepository) {
 				wks := []model.Workspace{}
 				mr.On("ListWorkspaces", mock.Anything, mock.Anything, mock.Anything).Once().Return(wks, nil)
 			},
@@ -35,7 +36,7 @@ func TestCollector(t *testing.T) {
 		},
 
 		"Having workspaces should return metrics.": {
-			mock: func(mr *prometheusmock.Repository) {
+			mock: func(mr *prometheusmock.WorkspaceRepository) {
 				wks := []model.Workspace{
 					{Name: "test1", ID: "test-id-1", Tags: []string{"t1a", "t1b"}, Org: "test-org", LastDriftPlan: &model.Plan{
 						ID:         "test-run1",
@@ -107,11 +108,11 @@ tfe_drift_workspace_info{organization_name="test-org",run_id="test-run3",run_url
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
-			mr := prometheusmock.NewRepository(t)
+			mr := prometheusmock.NewWorkspaceRepository(t)
 			test.mock(mr)
 
 			// Create collector.
-			c := internalprometheus.NewCollector(log.Noop, mr, process.NoopProcessor, nil, nil, 1*time.Second)
+			c, _ := internalprometheus.NewCollector(context.TODO(), log.Noop, mr, process.NoopProcessor, nil, nil, 1*time.Second)
 
 			// Register exporter.
 			reg := prometheus.NewRegistry()

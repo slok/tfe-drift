@@ -6,6 +6,10 @@
 
 - Allow specifying the number of workers that will be used concurrently to fetch the workspaces data. 
 
+### Changed
+
+- On controller mode, the metrics exporter workspace workspace retrieval has changed to async mode being updated at regular intervals.
+
 ## [v0.5.0] - 2022-12-11
 
 BREAKING: Prometheus metrics labels `workspaces_name` and `workspaces_id` have been renamed.
