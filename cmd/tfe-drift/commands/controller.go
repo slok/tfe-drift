@@ -16,6 +16,7 @@ import (
 	"github.com/slok/tfe-drift/internal/controller"
 	"github.com/slok/tfe-drift/internal/log"
 	internalprometheus "github.com/slok/tfe-drift/internal/metrics/prometheus"
+	fakestorage "github.com/slok/tfe-drift/internal/storage/fake"
 	tfestorage "github.com/slok/tfe-drift/internal/storage/tfe"
 	"github.com/slok/tfe-drift/internal/workspace/process"
 	wksprocess "github.com/slok/tfe-drift/internal/workspace/process"
@@ -42,6 +43,7 @@ type ControllerCommand struct {
 	healthCheckPath      string
 	pprofPath            string
 	fetchWorkers         int
+	fakeTFE              bool
 }
 
 // NewControllerCommand returns the Controller command.
@@ -69,6 +71,7 @@ func NewControllerCommand(rootConfig *RootCommand, app *kingpin.Application) *Co
 	cmd.Flag("health-check-path", "The path where the health check will be served.").Default("/status").StringVar(&c.healthCheckPath)
 	cmd.Flag("pprof-path", "The path where the pprof handlers will be served.").Default("/debug/pprof").StringVar(&c.pprofPath)
 	cmd.Flag("fetch-workers", "The number of workers running concurrently to fetch workspaces information.").Default("20").IntVar(&c.fetchWorkers)
+	cmd.Flag("fake-tfe", "Will fake the TFE repository, mainly used for development.").BoolVar(&c.fakeTFE)
 
 	return c
 }
@@ -93,25 +96,30 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 	includeTags := splitRepeatedArg(c.includeTags, repeatedArgSplitChar)
 	excludeTags := splitRepeatedArg(c.excludeTags, repeatedArgSplitChar)
 
-	config := &tfe.Config{
-		Token:   c.rootConfig.TFEToken,
-		Address: c.rootConfig.TFEAddress,
-	}
+	var repo tfestorage.Repository
+	if !c.fakeTFE {
+		config := &tfe.Config{
+			Token:   c.rootConfig.TFEToken,
+			Address: c.rootConfig.TFEAddress,
+		}
 
-	client, err := tfe.NewClient(config)
-	if err != nil {
-		return err
-	}
+		client, err := tfe.NewClient(config)
+		if err != nil {
+			return err
+		}
 
-	// Prepare processor chain.
-	repoTFEClient := tfestorage.NewClient(client)
-	repo, err := tfestorage.NewRepository(repoTFEClient, c.rootConfig.TFEOrg, c.rootConfig.TFEAddress, c.rootConfig.AppID)
-	if err != nil {
-		return fmt.Errorf("could not create tfe storage repository: %w", err)
-	}
+		// Prepare processor chain.
+		repoTFEClient := tfestorage.NewClient(client)
+		repo, err = tfestorage.NewRepository(repoTFEClient, c.rootConfig.TFEOrg, c.rootConfig.TFEAddress, c.rootConfig.AppID)
+		if err != nil {
+			return fmt.Errorf("could not create tfe storage repository: %w", err)
+		}
 
-	if c.dryRun {
-		repo = tfestorage.NewDryRunRepository(notVerboseLogger, repo)
+		if c.dryRun {
+			repo = tfestorage.NewDryRunRepository(notVerboseLogger, repo)
+		}
+	} else {
+		repo = fakestorage.NewRepository()
 	}
 
 	var includeProcessor process.Processor = process.NoopProcessor
@@ -189,7 +197,10 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 		})
 
 		// Register metrics collector to create the exporter.
-		promCollector := internalprometheus.NewCollector(logger, repo, chain, includeTags, excludeTags, c.metricsTimeout)
+		promCollector, err := internalprometheus.NewCollector(ctx, logger, repo, chain, includeTags, excludeTags, c.metricsTimeout)
+		if err != nil {
+			return fmt.Errorf("could not create metrics collector: %w", err)
+		}
 		prometheus.DefaultRegisterer.MustRegister(promCollector)
 
 		logger := logger.WithValues(log.Kv{

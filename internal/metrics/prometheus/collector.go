@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -15,12 +16,11 @@ import (
 	"github.com/slok/tfe-drift/internal/workspace/process"
 )
 
-type Repository interface {
+type WorkspaceRepository interface {
 	ListWorkspaces(ctx context.Context, includeTags, excludeTags []string) ([]model.Workspace, error)
-	GetLatestCheckPlan(ctx context.Context, w model.Workspace) (*model.Plan, error)
 }
 
-//go:generate mockery --case underscore --output prometheusmock --outpkg prometheusmock --name Repository
+//go:generate mockery --case underscore --output prometheusmock --outpkg prometheusmock --name WorkspaceRepository
 
 const (
 	stateOk             = "ok"
@@ -29,7 +29,7 @@ const (
 )
 
 type collector struct {
-	repo        Repository
+	repo        WorkspaceRepository
 	wkProcessor process.Processor
 	includeTags []string
 	excludeTags []string
@@ -42,9 +42,15 @@ type collector struct {
 	finishedDesc *prometheus.Desc
 }
 
-func NewCollector(logger log.Logger, repo Repository, wkProcessor process.Processor, includeTags []string, excludeTags []string, timeout time.Duration) prometheus.Collector {
+func NewCollector(ctx context.Context, logger log.Logger, repo WorkspaceRepository, wkProcessor process.Processor, includeTags []string, excludeTags []string, timeout time.Duration) (prometheus.Collector, error) {
+	const paceSeconds = 75
+	asyncRepo, err := newAsyncWorkspaceRepository(ctx, logger, repo, paceSeconds*time.Second, includeTags, excludeTags)
+	if err != nil {
+		return nil, err
+	}
+
 	return collector{
-		repo:        repo,
+		repo:        asyncRepo,
 		wkProcessor: wkProcessor,
 		includeTags: includeTags,
 		excludeTags: excludeTags,
@@ -71,7 +77,7 @@ func NewCollector(logger log.Logger, repo Repository, wkProcessor process.Proces
 			"Unix epoch timestamp when the drift detection ended.",
 			[]string{"workspace_name"}, nil,
 		),
-	}
+	}, nil
 }
 
 func (c collector) Describe(ch chan<- *prometheus.Desc) {}
@@ -162,4 +168,81 @@ func (c collector) collect(ctx context.Context) ([]prometheus.Metric, error) {
 	}
 
 	return metrics, nil
+}
+
+// asyncWorkspaceRepository is a repository that will retrieve the workspaces asynchronously.
+//
+// This is because retrieving all workspaces takes time and don't change that much and the
+// dynamix data of the plans, its hydrated by the processors, this way we will save time
+// retrieving workspaces and calls, and return up to date data on the more relevant and
+// dynamic data.
+type asyncWorkspaceRepository struct {
+	includeTagsIndex string
+	includeTags      []string
+	excludeTagsIndex string
+	excludeTags      []string
+	r                WorkspaceRepository
+	logger           log.Logger
+	cache            []model.Workspace
+	mu               sync.RWMutex
+}
+
+func newAsyncWorkspaceRepository(ctx context.Context, logger log.Logger, r WorkspaceRepository, pace time.Duration, includeTags, excludeTags []string) (WorkspaceRepository, error) {
+	ar := &asyncWorkspaceRepository{
+		includeTagsIndex: fmt.Sprintf("%v", includeTags),
+		includeTags:      includeTags,
+		excludeTagsIndex: fmt.Sprintf("%v", excludeTags),
+		excludeTags:      excludeTags,
+		r:                r,
+		logger:           logger,
+	}
+
+	// Fill cache for first time.
+	wks, err := r.ListWorkspaces(ctx, includeTags, excludeTags)
+	if err != nil {
+		return nil, fmt.Errorf("could not list workspaces to fill repository cache")
+	}
+	ar.cache = wks
+
+	// Start workspace async retrieval polling.
+	go ar.poll(ctx, pace)
+
+	return ar, nil
+}
+
+func (a *asyncWorkspaceRepository) poll(ctx context.Context, pace time.Duration) {
+	t := time.NewTicker(pace)
+	defer t.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			a.logger.Debugf("Async workspaces list triggered")
+			a.mu.Lock()
+			wk, err := a.r.ListWorkspaces(ctx, a.includeTags, a.excludeTags)
+			if err != nil {
+				a.logger.Errorf("Error retrieving async workspaces: %w", err)
+			} else {
+				a.cache = wk
+			}
+			a.mu.Unlock()
+		}
+	}
+}
+
+func (a *asyncWorkspaceRepository) ListWorkspaces(ctx context.Context, includeTags, excludeTags []string) ([]model.Workspace, error) {
+	if a.includeTagsIndex != fmt.Sprintf("%v", includeTags) {
+		return nil, fmt.Errorf("the include tags are different from the ones used for the cache")
+	}
+
+	if a.excludeTagsIndex != fmt.Sprintf("%v", excludeTags) {
+		return nil, fmt.Errorf("the exclude tags are different from the ones used for the cache")
+	}
+
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return a.cache, nil
 }
