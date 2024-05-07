@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/alecthomas/kingpin/v2"
 
 	"github.com/hashicorp/go-tfe"
 	"github.com/slok/tfe-drift/internal/log"

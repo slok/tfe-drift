@@ -9,9 +9,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/oklog/run"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/slok/tfe-drift/cmd/tfe-drift/commands"
 	"github.com/slok/tfe-drift/internal/info"
