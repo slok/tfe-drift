@@ -1,9 +1,9 @@
-FROM golang:1.19
+FROM golang:1.21
 
 LABEL org.opencontainers.image.source https://github.com/slok/tfe-drift
 
-ARG GOLANGCI_LINT_VERSION="1.50.1"
-ARG MOCKERY_VERSION="2.14.1"
+ARG GOLANGCI_LINT_VERSION="1.58.0"
+ARG MOCKERY_VERSION="2.43.0"
 ARG ostype=Linux
 
 RUN apt-get update && apt-get install -y \

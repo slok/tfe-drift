@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/hashicorp/go-tfe"
-	"gopkg.in/alecthomas/kingpin.v2"
 
 	tfestorage "github.com/slok/tfe-drift/internal/storage/tfe"
 	"github.com/slok/tfe-drift/internal/workspace/process"

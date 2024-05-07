@@ -7,11 +7,11 @@ import (
 	"net/http/pprof"
 	"time"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/hashicorp/go-tfe"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/slok/tfe-drift/internal/controller"
 	"github.com/slok/tfe-drift/internal/log"
