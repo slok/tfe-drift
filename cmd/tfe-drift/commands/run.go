@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/go-tfe"
 
 	tfestorage "github.com/slok/tfe-drift/internal/storage/tfe"
-	"github.com/slok/tfe-drift/internal/workspace/process"
 	wksprocess "github.com/slok/tfe-drift/internal/workspace/process"
 )
 
@@ -103,7 +102,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 		repo = tfestorage.NewDryRunRepository(logger, repo)
 	}
 
-	var includeProcessor process.Processor = process.NoopProcessor
+	var includeProcessor wksprocess.Processor = wksprocess.NoopProcessor
 	if len(includeNameRegexes) > 0 {
 		p, err := wksprocess.NewIncludeNameProcessor(logger, includeNameRegexes)
 		if err != nil {
@@ -112,7 +111,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 		includeProcessor = p
 	}
 
-	var excludeProcessor process.Processor = process.NoopProcessor
+	var excludeProcessor wksprocess.Processor = wksprocess.NoopProcessor
 	if len(excludeNameRegexes) > 0 {
 		p, err := wksprocess.NewExcludeNameProcessor(logger, excludeNameRegexes)
 		if err != nil {
@@ -121,7 +120,7 @@ func (c RunCommand) Run(ctx context.Context) error {
 		excludeProcessor = p
 	}
 
-	var resultOutProcessor process.Processor = process.NoopProcessor
+	var resultOutProcessor wksprocess.Processor = wksprocess.NoopProcessor
 	switch c.outFormat {
 	case outFormatJSON:
 		resultOutProcessor = wksprocess.NewDetailedJSONResultProcessor(c.rootConfig.Stdout, false)

@@ -27,6 +27,6 @@ func NewVersionCommand(rootConfig *RootCommand, app *kingpin.Application) Versio
 
 func (v VersionCommand) Name() string { return v.cmd.FullCommand() }
 func (v VersionCommand) Run(ctx context.Context) error {
-	fmt.Fprintf(v.rootConfig.Stdout, info.Version)
+	fmt.Fprintf(v.rootConfig.Stdout, "%s", info.Version)
 	return nil
 }
