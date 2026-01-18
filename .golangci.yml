@@ -18,6 +18,9 @@ linters:
     staticcheck:
       checks:
         - all
+        # Omit embedded fields from selector expression.
+        # https://staticcheck.dev/docs/checks/#QF1008
+        - -QF1008
   exclusions:
     generated: lax
     presets:

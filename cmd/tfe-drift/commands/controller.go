@@ -18,7 +18,6 @@ import (
 	internalprometheus "github.com/slok/tfe-drift/internal/metrics/prometheus"
 	fakestorage "github.com/slok/tfe-drift/internal/storage/fake"
 	tfestorage "github.com/slok/tfe-drift/internal/storage/tfe"
-	"github.com/slok/tfe-drift/internal/workspace/process"
 	wksprocess "github.com/slok/tfe-drift/internal/workspace/process"
 )
 
@@ -122,7 +121,7 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 		repo = fakestorage.NewRepository()
 	}
 
-	var includeProcessor process.Processor = process.NoopProcessor
+	var includeProcessor wksprocess.Processor = wksprocess.NoopProcessor
 	if len(includeNameRegexes) > 0 {
 		p, err := wksprocess.NewIncludeNameProcessor(notVerboseLogger, includeNameRegexes)
 		if err != nil {
@@ -131,7 +130,7 @@ func (c ControllerCommand) Run(ctx context.Context) error {
 		includeProcessor = p
 	}
 
-	var excludeProcessor process.Processor = process.NoopProcessor
+	var excludeProcessor wksprocess.Processor = wksprocess.NoopProcessor
 	if len(excludeNameRegexes) > 0 {
 		p, err := wksprocess.NewExcludeNameProcessor(notVerboseLogger, excludeNameRegexes)
 		if err != nil {
