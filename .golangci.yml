@@ -1,4 +1,4 @@
----
+version: "2"
 run:
   timeout: 3m
   build-tags:
@@ -6,16 +6,25 @@ run:
 
 linters:
   enable:
-    - misspell
-    - goimports
-    - revive
-    - gofmt
-    #- depguard
     - godot
+    - misspell
+    - revive
+  settings:
+    revive:
+      rules:
+        # Spammy linter and complex to fix on lots of parameters. Makes more harm that it solves.
+        - name: unused-parameter
+          disabled: true
+    staticcheck:
+      checks:
+        - all
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
 
-linters-settings:
-  revive:
-    rules:
-      # Spammy linter and complex to fix on lots of parameters. Makes more harm that it solves.
-      - name: unused-parameter
-        disabled: true
+formatters:
+  enable:
+    - gofmt
+    - goimports
