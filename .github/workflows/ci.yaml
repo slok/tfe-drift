@@ -10,6 +10,8 @@ jobs:
     container: golangci/golangci-lint:v2.8.0-alpine
     steps:
       - uses: actions/checkout@v4
+      - name: Configure git for container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - run: ./scripts/check/check.sh
 
   unit-test:
