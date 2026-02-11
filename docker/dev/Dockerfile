@@ -1,4 +1,4 @@
-FROM golang:1.25
+FROM golang:1.26
 
 LABEL org.opencontainers.image.source https://github.com/slok/tfe-drift
 
